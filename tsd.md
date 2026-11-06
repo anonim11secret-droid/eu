@@ -182,13 +182,14 @@
 											end
 
 											callWithRestoredThreadIdentity = function(line, ...)
-												if type(line) == "function" then
-													local knob = getthreadidentity()
-													local currentDate = pcall
-													local packed = table.pack(...)
-													currentDate(line, table.unpack(packed, 1, packed.n))
-													setthreadidentity(knob)
-												end
+									if type(line) == "function" then
+										local knob = getthreadidentity()
+										local currentDate = pcall
+										local packed = table.pack(...)
+										local ok, err = currentDate(line, table.unpack(packed, 1, packed.n))
+										pcall(setthreadidentity, knob)
+										return ok, err
+									end
 											end
 
 											do
@@ -198,7 +199,7 @@
 													for vertex, innerValue in sourceTable, nil, nil do
 														pcall(function()
 															for neighbor, encodedString in innerValue, nil, nil do
-																vertex[neighbor] = encodedString
+																		innerValue[neighbor] = encodedString
 															end
 														end)
 													end
@@ -687,12 +688,7 @@
 													end,
 													Set = function(line, object)
 														if not object or object == Enum.KeyCode.Unknown then
-															if type(n24) == "number" and stack[63] <= n24 then
-																while true do
-																end
-															else
-																result18[line] = nil
-															end
+																		result18[line] = nil
 														else
 															result18[line] = { Key = object.Name, Mode = tbl12.GetMode(line) }
 														end
@@ -1980,11 +1976,13 @@ TextYAlignment = Enum.TextYAlignment.Center,
 														Size = UDim2.new(0, 162, 0, stack[52]),
 														ScrollingDirection = Enum.ScrollingDirection.Y,
 														ScrollingEnabled = true,
-														ScrollBarThickness = 0,
-														ScrollBarImageTransparency = 1,
-														CanvasSize = UDim2.new(0, stack[33], stack[33], stack[33]),
-														AutomaticCanvasSize = Enum.AutomaticSize.Y,
-														ClipsDescendants = false,
+																	ScrollBarThickness = 0,
+																	ScrollBarImageTransparency = 1,
+																	ScrollingDirection = Enum.ScrollingDirection.Y,
+																	ScrollingEnabled = true,
+																	CanvasSize = UDim2.new(0, 0, 0, 0),
+																	AutomaticCanvasSize = Enum.AutomaticSize.None,
+																	ClipsDescendants = true,
 														Parent = line.mainFrameYay,
 													})
 
@@ -2000,9 +1998,42 @@ TextYAlignment = Enum.TextYAlignment.Center,
 													line.sectionLayoutThing = createInstance("UIListLayout", {
 														Name = "UIListLayout",
 														Padding = UDim.new(0, 10),
-														SortOrder = Enum.SortOrder.LayoutOrder,
-														Parent = line.sectionHolderScroll,
-													})
+																	SortOrder = Enum.SortOrder.LayoutOrder,
+																	Parent = line.sectionHolderScroll,
+																})
+
+																local function refreshSectionCanvas()
+																	local scroll = line.sectionHolderScroll
+																	if not scroll or not scroll.Parent then return end
+																	local height = line.sectionLayoutThing.AbsoluteContentSize.Y
+																	local padding = scroll:FindFirstChildOfClass("UIPadding")
+																	if padding then
+																		height += padding.PaddingTop.Offset + padding.PaddingBottom.Offset
+																	end
+																	scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(height, scroll.AbsoluteSize.Y))
+																end
+									trackConnection(line.sectionLayoutThing:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshSectionCanvas))
+									task.defer(refreshSectionCanvas)
+
+									local sectionTouch, sectionStart, sectionCanvasStart
+									trackConnection(line.sectionHolderScroll.InputBegan:Connect(function(inputObject)
+										if inputObject.UserInputType == Enum.UserInputType.Touch then
+											sectionTouch = inputObject
+											sectionStart = inputObject.Position
+											sectionCanvasStart = line.sectionHolderScroll.CanvasPosition.Y
+										end
+									end))
+									trackConnection(userInputService.InputChanged:Connect(function(inputObject)
+										if inputObject ~= sectionTouch or not sectionStart then return end
+										local maximum = math.max(0, line.sectionHolderScroll.CanvasSize.Y.Offset - line.sectionHolderScroll.AbsoluteSize.Y)
+										local target = math.clamp(sectionCanvasStart - (inputObject.Position.Y - sectionStart.Y), 0, maximum)
+										line.sectionHolderScroll.CanvasPosition = Vector2.new(0, target)
+									end))
+									trackConnection(userInputService.InputEnded:Connect(function(inputObject)
+										if inputObject == sectionTouch then
+											sectionTouch, sectionStart = nil, nil
+										end
+									end))
 
 													line.contentHolderFrame = createInstance("Frame", {
 														Name = stack[135],
@@ -2355,7 +2386,9 @@ end)
 table.insert(searchRows, row)
 end
 
-resultsFrame.Size = UDim2.new(0, 255, 0, math.min(count, 7) * 38 + 8)
+																local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
+																local maxResultsHeight = math.max(46, viewport.Y - 70)
+																resultsFrame.Size = UDim2.new(0, 255, 0, math.min(math.min(count, 7) * 38 + 8, maxResultsHeight))
 resultsFrame.CanvasPosition = Vector2.new(0, 0)
 resultsFrame.Visible = true
 end
@@ -3344,18 +3377,13 @@ end
 													initializeSystem()
 													sourceTable.valueLabelText.Text = initialize(screenPoint) .. " - " .. initialize(newPrice)
 
-													if not object.NoSave then
-														if type(n24) == "number" and n24 >= 4769 then
-															while true do
-															end
-														else
-															configData.DoubleSliders[radians] = { Min = screenPoint, Max = newPrice }
-
-															if not concatenated then
-																saveConfig()
-															end
-														end
-													end
+																if not object.NoSave then
+																	configData.DoubleSliders[radians] = { Min = screenPoint, Max = newPrice }
+																	
+																	if not concatenated then
+																		saveConfig()
+																	end
+																end
 
 													object.Callback(screenPoint, newPrice)
 												end
@@ -4476,7 +4504,8 @@ end
 												local size = sourceTable.buttonFrame.AbsolutePosition
 												local screenSize = sourceTable.buttonFrame.AbsoluteSize
 												local currentScale = line.Library.dropdownHolderScale and line.Library.dropdownHolderScale.Scale or 1
-												tweenInstance(sourceTable.optionHolderFrame, { Position = UDim2.new(stack[33], size.X / currentScale, 0, (size.Y + screenSize.Y + 10) / currentScale) }, 0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+																	local popupY = sourceTable.openAbove and (size.Y - sourceTable.optionHolderFrame.AbsoluteSize.Y - 10) or (size.Y + screenSize.Y + 10)
+																	tweenInstance(sourceTable.optionHolderFrame, { Position = UDim2.new(stack[33], size.X / currentScale, 0, popupY / currentScale) }, 0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 											end
 
 											sourceTable.followConn = nil
@@ -4517,8 +4546,15 @@ end
 												sourceTable.optionHolderFrame.Size = UDim2.new(stack[33], sourceTable.holderWidth, stack[33], stack[33])
 												sourceTable.optionHolderFrame.Visible = stack[200]
 																						sourceTable.holderScale.Scale = 0.9
-												local openError = math.min(#object.Options, 50)
-																						local step = math.min(16 + openError * 20 + math.max(openError - 1, 0) * 7 + (top and elapsedTime + 4 or 0), 300)
+																	local openError = math.min(#object.Options, 50)
+																	local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
+																	local desiredHeight = math.min(16 + openError * 20 + math.max(openError - 1, 0) * 7 + (top and elapsedTime + 4 or 0), 300)
+																	local availableBelow = math.max(60, viewport.Y - (size.Y + screenSize.Y) - 20)
+																	local availableAbove = math.max(60, size.Y - 20)
+																	local openAbove = availableBelow < desiredHeight and availableAbove > availableBelow
+																	local step = math.min(desiredHeight, openAbove and availableAbove or availableBelow)
+																	local popupY = openAbove and (size.Y - step - 10) or (size.Y + screenSize.Y + 10)
+																	sourceTable.openAbove = openAbove
 
 												if top and sourceTable.searchBox then
 													sourceTable.searchBox.Text = ""
@@ -4527,7 +4563,7 @@ end
 												end
 
 												tweenInstance(sourceTable.optionHolderFrame, {
-													Position = UDim2.new(stack[33], size.X / currentScale, 0, (size.Y + screenSize.Y + 10) / currentScale),
+																	Position = UDim2.new(stack[33], size.X / currentScale, 0, popupY / currentScale),
 													Size = UDim2.new(0, sourceTable.holderWidth, 0, step),
 												}, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
@@ -4567,7 +4603,8 @@ end
 												if not sourceTable.isOpen then
 													return
 												end
-												sourceTable.isOpen = false
+																	sourceTable.isOpen = false
+																	sourceTable.openAbove = false
 												local size = sourceTable.buttonFrame.AbsolutePosition
 												local screenSize = sourceTable.buttonFrame.AbsoluteSize
 												local currentScale = line.Library.dropdownHolderScale and line.Library.dropdownHolderScale.Scale or 1
@@ -5799,9 +5836,9 @@ Parent = firstElement.buttonFrame,
 										table.insert(line.tabsInSection, firstElement)
 										table.insert(line.Library.tabsGoWoosh, firstElement)
 
-										if #line.Library.tabsGoWoosh == 1 then
-											firstElement:Activate()
-										end
+																	if #line.tabsInSection == 1 then
+																		firstElement:Activate()
+																	end
 
 										task.defer(bottomSnapZone)
 										return firstElement
@@ -6156,11 +6193,23 @@ callWithRestoredThreadIdentity(tbl25.PlayerMods.Reset)
 end
 								end
 
-								if tbl23 then
-									callWithRestoredThreadIdentity(tbl23.Destroy)
-								end
+									if tbl23 then
+										callWithRestoredThreadIdentity(tbl23.Destroy)
+									end
 
-								cleanupResources(larpBBState)
+									if globalEnvironment and globalEnvironment.LarpDeviceSpoofQueue then
+										pcall(function()
+											globalEnvironment.LarpDeviceSpoofQueue:Disconnect()
+										end)
+										globalEnvironment.LarpDeviceSpoofQueue = nil
+									end
+
+									if globalEnvironment and globalEnvironment.LarpDeviceSpoofRun and globalEnvironment.LarpDeviceSpoofRun.Restore then
+										pcall(globalEnvironment.LarpDeviceSpoofRun.Restore)
+										globalEnvironment.LarpDeviceSpoofRun = nil
+									end
+
+									cleanupResources(larpBBState)
 								larpBBState.Connections = {}
 
 								if larpBBState.PreclickQueue then
@@ -9565,8 +9614,7 @@ Listener.Observe = ObserveDevice
 												larpBBState.StatsBall = nil
 
 												if type(n24) == "number" and n24 >= 4766 then
-													while true do
-													end
+													return
 												end
 											end
 
@@ -11023,8 +11071,7 @@ Listener.Observe = ObserveDevice
 									return
 								end
 
-								while true do
-								end
+								return
 							end
 
 							tbl25.ManualSpam.Start = function()
@@ -13082,8 +13129,7 @@ Listener.Observe = ObserveDevice
 											return
 										end
 
-										while true do
-										end
+										return
 									end)
 
 									local partInstance = newCharacter:FindFirstChild("SecretUpgrade")
@@ -13118,8 +13164,7 @@ Listener.Observe = ObserveDevice
 											return
 										end
 
-										while true do
-										end
+										return
 									end)
 
 									hook.MakeOverlay("Finisher", character2 and character2:FindFirstChild("Finisher"), function()
@@ -13825,8 +13870,7 @@ Listener.Observe = ObserveDevice
 										return
 									end
 
-									while true do
-									end
+									return
 								end
 
 								hook.PlayCloneTrack = function(line, object)
@@ -16886,8 +16930,7 @@ Listener.Observe = ObserveDevice
 										return
 									end
 
-									while true do
-									end
+									return
 								end
 
 								local result12 = tbl23.Images
@@ -17120,8 +17163,7 @@ Listener.Observe = ObserveDevice
 									return
 								end
 
-								while true do
-								end
+								return
 							end
 
 							tbl23.ClearAdded = function()
@@ -17816,8 +17858,7 @@ Listener.Observe = ObserveDevice
 									return
 								end
 
-								while true do
-								end
+								return
 							end
 
 							tbl23.Destroy = function()
@@ -17835,8 +17876,7 @@ Listener.Observe = ObserveDevice
 
 								if model then
 									if n25 < 6615 then
-										while true do
-										end
+										return
 									else
 										tbl23.RestoreAppearance(model)
 									end
