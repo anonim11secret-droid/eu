@@ -2022,6 +2022,44 @@ TextYAlignment = Enum.TextYAlignment.Center,
 																line.sectionHolderScroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshSectionScrollCanvas)
 																task.defer(refreshSectionScrollCanvas)
 
+																-- Fallback para aparelhos touch: alguns executores não encaminham
+																-- corretamente o gesto para o ScrollingFrame escalado.
+																local sectionTouchInput
+																local sectionTouchStart
+																local sectionCanvasStart = 0
+
+																line.sectionHolderScroll.InputBegan:Connect(function(inputObject)
+																	if inputObject.UserInputType == Enum.UserInputType.Touch then
+																		sectionTouchInput = inputObject
+																		sectionTouchStart = inputObject.Position
+																		sectionCanvasStart = line.sectionHolderScroll.CanvasPosition.Y
+																	end
+																end)
+
+																line.sectionHolderScroll.InputChanged:Connect(function(inputObject)
+																	if inputObject.UserInputType == Enum.UserInputType.Touch then
+																		sectionTouchInput = inputObject
+																	end
+																end)
+
+																userInputService.InputChanged:Connect(function(inputObject)
+																	if inputObject ~= sectionTouchInput or not sectionTouchStart then
+																		return
+																	end
+
+																	local delta = inputObject.Position.Y - sectionTouchStart.Y
+																	local maximum = math.max(0, line.sectionHolderScroll.CanvasSize.Y.Offset - line.sectionHolderScroll.AbsoluteSize.Y)
+																	local target = math.clamp(sectionCanvasStart - delta, 0, maximum)
+																	line.sectionHolderScroll.CanvasPosition = Vector2.new(0, target)
+																end)
+
+																userInputService.InputEnded:Connect(function(inputObject)
+																	if inputObject == sectionTouchInput then
+																		sectionTouchInput = nil
+																		sectionTouchStart = nil
+																	end
+																end)
+
 													line.contentHolderFrame = createInstance("Frame", {
 														Name = stack[135],
 														Active = stack[200],
@@ -19070,14 +19108,6 @@ Listener.Observe = ObserveDevice
 									local placeholder = onTouched("Misc")
 									local iterator = onTouched("Optimizations")
 									local entity = onTouched("Settings")
-
-	-- Função de teste vazia, disponível na aba Misc.
-	local function test()
-	end
-
-	local testGroup = placeholder:AddGroup({ Name = "Test", Side = "Left", Icon = "rbxassetid://10723427199" })
-	testGroup:AddButton({ Name = "test", Callback = test })
-
 	-- ===== LARP PLAYER TAB =====
 do
 local playerRunService = game:GetService("RunService")
