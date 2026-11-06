@@ -1978,13 +1978,13 @@ TextYAlignment = Enum.TextYAlignment.Center,
 														BackgroundTransparency = 1,
 														Position = UDim2.new(stack[33], stack[17], stack[33], 75),
 														Size = UDim2.new(0, 162, 0, stack[52]),
-																	ScrollingDirection = Enum.ScrollingDirection.Y,
-																	ScrollingEnabled = true,
-																	ScrollBarThickness = 3,
-																	ScrollBarImageTransparency = 0.35,
-																	CanvasSize = UDim2.new(0, 0, 0, 0),
-																	AutomaticCanvasSize = Enum.AutomaticSize.None,
-																	ClipsDescendants = true,
+														ScrollingDirection = Enum.ScrollingDirection.Y,
+														ScrollingEnabled = true,
+														ScrollBarThickness = 0,
+														ScrollBarImageTransparency = 1,
+														CanvasSize = UDim2.new(0, stack[33], stack[33], stack[33]),
+														AutomaticCanvasSize = Enum.AutomaticSize.Y,
+														ClipsDescendants = false,
 														Parent = line.mainFrameYay,
 													})
 
@@ -2000,65 +2000,9 @@ TextYAlignment = Enum.TextYAlignment.Center,
 													line.sectionLayoutThing = createInstance("UIListLayout", {
 														Name = "UIListLayout",
 														Padding = UDim.new(0, 10),
-																	SortOrder = Enum.SortOrder.LayoutOrder,
-																	Parent = line.sectionHolderScroll,
-																})
-
-																local function refreshSectionScrollCanvas()
-																	if not line.sectionHolderScroll or not line.sectionHolderScroll.Parent then
-																		return
-																	end
-
-																	local contentHeight = line.sectionLayoutThing.AbsoluteContentSize.Y
-																	local padding = line.sectionHolderScroll:FindFirstChildOfClass("UIPadding")
-																	if padding then
-																		contentHeight = contentHeight + padding.PaddingTop.Offset + padding.PaddingBottom.Offset
-																	end
-
-																	line.sectionHolderScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight, line.sectionHolderScroll.AbsoluteSize.Y))
-																end
-
-																line.sectionLayoutThing:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(refreshSectionScrollCanvas)
-																line.sectionHolderScroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshSectionScrollCanvas)
-																task.defer(refreshSectionScrollCanvas)
-
-																-- Fallback para aparelhos touch: alguns executores não encaminham
-																-- corretamente o gesto para o ScrollingFrame escalado.
-																local sectionTouchInput
-																local sectionTouchStart
-																local sectionCanvasStart = 0
-
-																line.sectionHolderScroll.InputBegan:Connect(function(inputObject)
-																	if inputObject.UserInputType == Enum.UserInputType.Touch then
-																		sectionTouchInput = inputObject
-																		sectionTouchStart = inputObject.Position
-																		sectionCanvasStart = line.sectionHolderScroll.CanvasPosition.Y
-																	end
-																end)
-
-																line.sectionHolderScroll.InputChanged:Connect(function(inputObject)
-																	if inputObject.UserInputType == Enum.UserInputType.Touch then
-																		sectionTouchInput = inputObject
-																	end
-																end)
-
-																userInputService.InputChanged:Connect(function(inputObject)
-																	if inputObject ~= sectionTouchInput or not sectionTouchStart then
-																		return
-																	end
-
-																	local delta = inputObject.Position.Y - sectionTouchStart.Y
-																	local maximum = math.max(0, line.sectionHolderScroll.CanvasSize.Y.Offset - line.sectionHolderScroll.AbsoluteSize.Y)
-																	local target = math.clamp(sectionCanvasStart - delta, 0, maximum)
-																	line.sectionHolderScroll.CanvasPosition = Vector2.new(0, target)
-																end)
-
-																userInputService.InputEnded:Connect(function(inputObject)
-																	if inputObject == sectionTouchInput then
-																		sectionTouchInput = nil
-																		sectionTouchStart = nil
-																	end
-																end)
+														SortOrder = Enum.SortOrder.LayoutOrder,
+														Parent = line.sectionHolderScroll,
+													})
 
 													line.contentHolderFrame = createInstance("Frame", {
 														Name = stack[135],
@@ -4196,9 +4140,6 @@ end
 
 											sourceTable.optionContainerFrame = createInstance("ScrollingFrame", {
 												Name = stack[28],
-												Active = true,
-												ScrollingEnabled = true,
-												ScrollingDirection = Enum.ScrollingDirection.Y,
 												BackgroundTransparency = 1,
 												Position = UDim2.new(0, 0, stack[33], top and elapsedTime + 4 or 0),
 												Size = UDim2.new(1, 0, 1, top and -(elapsedTime + 4) or 0),
@@ -5204,7 +5145,7 @@ end
 
 											sourceTable.mainFrame = createInstance("Frame", {
 												Name = stack[176],
-												Active = true,
+												Active = false, -- mobile: Active=true engolia o toque e impedia o scroll por arrasto
 												BackgroundColor3 = line.Library.config.Colors.Secondary,
 												Position = UDim2.new(0, stack[18], 0, 0),
 												BorderColor3 = line.Library.config.Colors.Black,
@@ -5683,7 +5624,7 @@ end
 											Library = line.Library,
 											buttonFrame = createInstance("Frame", {
 												Name = "TabButton",
-												Active = true,
+												Active = false,
 												BackgroundColor3 = line.Library.config.AccentColor,
 												BackgroundTransparency = 1,
 												BorderColor3 = line.Library.config.Colors.Black,
@@ -5736,7 +5677,7 @@ Parent = firstElement.buttonFrame,
 
 										firstElement.contentFadeFrame = createInstance("CanvasGroup", {
 											Name = stack[24],
-											Active = true,
+											Active = false,
 											BackgroundTransparency = 1,
 											Position = UDim2.new(0, 4, 0, 4),
 											Size = UDim2.new(1, -8, stack[18], -8),
@@ -19102,13 +19043,14 @@ Listener.Observe = ObserveDevice
 									return radians:AddTab({ Name = line, Description = "Main", Icon = "rbxassetid://76499042599127" })
 								end
 
-									local entry = onTouched("Main")
-	local playerTab = onTouched("Player")
-	local part = onTouched("Detections")
-									local placeholder = onTouched("Misc")
-									local iterator = onTouched("Optimizations")
-									local entity = onTouched("Settings")
-	-- ===== LARP PLAYER TAB =====
+								local entry = onTouched("Main")
+local playerTab = onTouched("Player")
+local part = onTouched("Detections")
+								local placeholder = onTouched("Misc")
+								local iterator = onTouched("Optimizations")
+								local entity = onTouched("Settings")
+
+-- ===== LARP PLAYER TAB =====
 do
 local playerRunService = game:GetService("RunService")
 local playerMods = {
