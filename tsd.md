@@ -5952,8 +5952,25 @@ Parent = firstElement.buttonFrame,
 											Parent = players.tabHolderFrame,
 										})
 
+										-- AbsoluteContentSize vem em pixels JA ESCALADOS pela janela (UIScale): em celular (escala < 1)
+										-- a altura saia pequena demais e cortava as ultimas abas (Optimizations/Settings).
+										-- Aqui a altura e somada das proprias abas, em unidades da janela, sem depender da escala.
+										local function getTabsHeight()
+											local total, count = 0, 0
+											for _, child in ipairs(players.tabHolderFrame:GetChildren()) do
+												if child:IsA("GuiObject") and child.Visible then
+													total = total + child.Size.Y.Offset
+													count = count + 1
+												end
+											end
+											if count > 1 then
+												total = total + players.tabLayoutThing.Padding.Offset * (count - 1)
+											end
+											return total
+										end
+
 										local function mainLoop()
-											local elapsedTime = players.tabLayoutThing.AbsoluteContentSize.Y
+											local elapsedTime = getTabsHeight()
 											players.tabHolderFrame.Size = UDim2.new(stack[33], stack[3], 0, elapsedTime)
 
 											if players.isExpanded then
@@ -5968,7 +5985,7 @@ Parent = firstElement.buttonFrame,
 											tweenInstance(manager, { Rotation = players.isExpanded and stack[33] or -stack[91] }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
 											if players.isExpanded then
-												local screenHeight = players.tabLayoutThing.AbsoluteContentSize.Y
+												local screenHeight = getTabsHeight()
 												players.tabHolderScale.Scale = 0.92
 												tweenInstance(players.containerFrame, { Size = UDim2.new(0, 158, 0, 32 + screenHeight + 14) }, 0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 												tweenInstance(players.tabHolderScale, { Scale = 1 }, 0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
@@ -19647,6 +19664,15 @@ tbl24.dropdowns.Target_Player = angleRadians:AddDropdown({
 	Callback = function(value)
 		tbl20.TargetPlayerName = (value ~= "None") and value or nil
 		tbl25.Target.UpdateHighlight()
+	end,
+})
+
+tbl24.toggles.Test = angleRadians:AddToggle({
+	Name = "Test",
+	SaveId = "Test_Option",
+	Default = false,
+	Callback = function(value)
+		-- opcao de teste: nao faz nada
 	end,
 })
 
