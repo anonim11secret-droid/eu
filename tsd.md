@@ -17,8 +17,7 @@
 												[20] = "TabIndicatorTrail",
 												[21] = "UIGradient",
 												[22] = 0.001,
-												[23] = "WatermarkText",
-												[24] = "TabContentFrame",
+																								[24] = "TabContentFrame",
 												[26] = 0.25,
 												[27] = 0.493,
 												[28] = "DropdownOptions",
@@ -206,7 +205,6 @@
 												end
 
 												globalEnvironment = getgenv()
-												scriptKey = script_key or globalEnvironment.script_key
 												local result4 = globalEnvironment.LarpBB_State
 												local effect = globalEnvironment.LarpBB
 
@@ -404,9 +402,7 @@
 													"Auto_Parry",
 													"Auto_Spam",
 													stack[140],
-													"Auto_Rejoin",
-													"Auto_Vote",
-													"Death_Slash",
+																					"Death_Slash",
 													"Time_Hole",
 													"No_Render",
 													"Anti_Lag",
@@ -418,7 +414,6 @@
 													"Ball_Stats",
 													"Unlock_All",
 													"Custom_Streak",
-													"Hit_Freeze",
 													stack[88],
 													"Anti_AFK",
 													"Anim_Fix",
@@ -579,6 +574,13 @@
 												end
 
 												migrateConfigData(configData)
+												for _, modeKey in ipairs({ "AutoPlayMode", "Auto_Play_Mode" }) do
+													if configData.Dropdowns[modeKey] == "Play Edge" then
+														configData.Dropdowns[modeKey] = "Edge"
+													elseif configData.Dropdowns[modeKey] == "Play Middle" then
+														configData.Dropdowns[modeKey] = "Middle"
+													end
+												end
 
 												for _, innerValue in { "ManualSpam", "manual_spam_enabled" }, nil, nil do
 													configData.Toggles[innerValue] = nil
@@ -1191,7 +1193,6 @@
 													managerObject.currentTabYay = nil
 													managerObject.notificationsAreCool = {}
 													managerObject.isToggledOn = true
-managerObject.watermarkSettings = { Enabled = true, Name = true, Time = true, FPS = true, Ping = true, KeepVisible = false }
 													managerObject.dropdownHolderRef = nil
 													managerObject.dropdownHolderScale = nil
 													managerObject.sectionRefreshers = {}
@@ -1215,8 +1216,7 @@ managerObject.watermarkSettings = { Enabled = true, Name = true, Time = true, FP
 													})
 
 													line.dropdownHolderScale = createInstance("UIScale", { Name = stack[180], Scale = 1, Parent = line.dropdownHolderRef })
-													line:CreateWatermarkBecauseWeCool()
-													line:CreateMainFrameYay()
+															line:CreateMainFrameYay()
 													line:UpdateLayoutScale()
 
 													line.screenGuiYay:GetPropertyChangedSignal(stack[32]):Connect(function()
@@ -1547,9 +1547,7 @@ managerObject.watermarkSettings = { Enabled = true, Name = true, Time = true, FP
 															line.dropdownHolderRef.Visible = true
 														end
 
-														line.watermarkFrame.GroupTransparency = 1
-line.mainFrameYay.Visible = true
-line.watermarkFrame.Visible = line:WatermarkShouldShow() and true or false
+			line.mainFrameYay.Visible = true
 local knob = line.mainFrameYay:FindFirstChildOfClass(stack[16])
 
 														if knob then
@@ -1562,10 +1560,7 @@ local knob = line.mainFrameYay:FindFirstChildOfClass(stack[16])
 															tweenInstance(knob, { Scale = xString }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 														end
 
-														if line:WatermarkShouldShow() then
-tweenInstance(line.watermarkFrame, { GroupTransparency = 0 }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-end
-
+														
 														task.delay(0.5, function()
 															if line.isToggledOn and line.sectionRefreshers then
 																for _, zone in ipairs(line.sectionRefreshers) do
@@ -1587,10 +1582,7 @@ end
 															tweenInstance(panel, { Scale = stack[198] * xString }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 														end
 
-														if not (line.watermarkSettings.KeepVisible and line:WatermarkShouldShow()) then
-tweenInstance(line.watermarkFrame, { GroupTransparency = 1 }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-end
-
+														
 														if not configData.First_Execution_Done then
 															configData.First_Execution_Done = stack[200]
 															saveConfig()
@@ -1609,177 +1601,12 @@ end
 															if not line.isToggledOn then
 																line.mainFrameYay.Visible = stack[101]
 
-if not (line.watermarkSettings.KeepVisible and line:WatermarkShouldShow()) then
-line.watermarkFrame.Visible = false
-end
 end
 														end)
 													end
 												end
 
-												index.CreateWatermarkBecauseWeCool = function(line)
-line.watermarkSettings = line.watermarkSettings or { Enabled = true, Name = true, Time = true, FPS = true, Ping = true, KeepVisible = false }
-													local query = line.config.Name .. " | 00:00:00 | 60 FPS | 0 MS"
-													local elapsedTime = measureTextWidth(query, 14, Enum.Font.GothamSemibold) + 45
-													local difference = 0
-
-													line.watermarkFrame = createInstance("CanvasGroup", {
-														Name = "WatermarkCuzWeNeedFlexing",
-														BackgroundColor3 = line.config.Colors.Secondary,
-														Position = UDim2.new(0.01, 0, 0.02, 0),
-														BorderColor3 = line.config.Colors.Black,
-														BorderSizePixel = stack[33],
-														GroupTransparency = 1,
-														Size = UDim2.new(stack[33], elapsedTime, stack[33], 36),
-														Parent = line.screenGuiYay,
-													})
-
-													createInstance(stack[137], {
-														Name = "RoundedCornersAreSexy",
-														CornerRadius = UDim.new(0, stack[72]),
-														Parent = line.watermarkFrame,
-													})
-
-													line.watermarkIcon = createInstance("TextLabel", {
-														Name = "IconGoesHere",
-														BackgroundTransparency = 1,
-														BorderSizePixel = 0,
-														Position = UDim2.new(0, stack[192], 0.5, -stack[148]),
-														Size = UDim2.new(0, 15, 0, 15),
-														Font = Enum.Font.GothamBold,
-														Text = "$",
-														TextSize = 17,
-														TextColor3 = line.config.Colors.Accent,
-														TextXAlignment = Enum.TextXAlignment.Center,
-														TextYAlignment = Enum.TextYAlignment.Center,
-														Parent = line.watermarkFrame,
-													})
-
-													line.watermarkTextLabel = createInstance("TextLabel", {
-														Name = stack[23],
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-														TextColor3 = Color3.new(1, 1, 1),
-														Text = query,
-														BackgroundColor3 = Color3.new(1, stack[18], 1),
-														BackgroundTransparency = 1,
-														Position = UDim2.new(0, stack[14], 0, 0),
-														BorderSizePixel = 0,
-														BorderColor3 = Color3.new(),
-														TextSize = 14,
-														Size = UDim2.new(1, -40, 1, 0),
-														TextXAlignment = Enum.TextXAlignment.Left,
-														Parent = line.watermarkFrame,
-													})
-
-													createInstance("UIPadding", { Name = "PaddingForDays", PaddingTop = UDim.new(0, 2), Parent = line.watermarkTextLabel })
-													index32(line.watermarkFrame)
-													local openError = 60
-													local step = 0
-													local osClock = os.clock()
-													local knob = nil
-
-													knob = trackConnection(runService.RenderStepped:Connect(function()
-														if not line.watermarkFrame or not line.watermarkFrame.Parent then
-															disconnectTrackedConnection(knob)
-															return
-														end
-														step += 1
-														local finish = os.clock()
-
-														if finish - osClock >= 1 then
-															openError = math.floor(step / (finish - osClock) + 0.5)
-															step = 0
-															osClock = finish
-														end
-													end))
-
-													local function refreshWatermarkText()
-local frame = line.watermarkFrame
-local label = line.watermarkTextLabel
-
-if not frame or not frame.Parent or not label or not label.Parent then
-return false
-end
-
-local settings = line.watermarkSettings
-local pingValue = tonumber(latestPingMs) or tonumber(difference) or 0
-difference = math.floor(pingValue + 0.5)
-
-local parts = {}
-
-if settings.Name then
-table.insert(parts, tostring(line.config.Name or "Larp"))
-end
-
-if settings.Time then
-table.insert(parts, tostring(os.date("%H:%M:%S")))
-end
-
-if settings.FPS then
-table.insert(parts, tostring(openError) .. " FPS")
-end
-
-if settings.Ping then
-table.insert(parts, tostring(difference) .. tostring(stack[10]))
-end
-
-local text = table.concat(parts, " | ")
-label.Text = text
-local targetWidth = measureTextWidth(text, 14, Enum.Font.GothamSemibold) + 45
-
-if stack[70] < math.abs(frame.Size.X.Offset - targetWidth) then
-tweenInstance(frame, { Size = UDim2.new(0, targetWidth, 0, 36) }, 0.2)
-end
-
-return true
-end
-
-line.refreshWatermarkText = refreshWatermarkText
-
-task.spawn(function()
-while task.wait(1) do
-if not refreshWatermarkText() then
-break
-end
-end
-end)
-end
-
-index.WatermarkShouldShow = function(line)
-local settings = line.watermarkSettings
-return settings.Enabled and (settings.Name or settings.Time or settings.FPS or settings.Ping)
-end
-
-index.RefreshWatermark = function(line)
-local frame = line.watermarkFrame
-
-if not frame or not frame.Parent then
-return
-end
-
-if line.refreshWatermarkText then
-line.refreshWatermarkText()
-end
-
-local visibleNow = line:WatermarkShouldShow() and (line.isToggledOn or line.watermarkSettings.KeepVisible)
-
-if visibleNow then
-frame.Visible = true
-tweenInstance(frame, { GroupTransparency = 0 }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-else
-tweenInstance(frame, { GroupTransparency = 1 }, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-
-task.delay(0.3, function()
-local stillShow = line:WatermarkShouldShow() and (line.isToggledOn or line.watermarkSettings.KeepVisible)
-
-if frame.Parent and not stillShow then
-frame.Visible = false
-end
-end)
-end
-end
-
-index.CreateMainFrameYay = function(line)
+												index.CreateMainFrameYay = function(line)
 													line.mainFrameYay = createInstance("CanvasGroup", {
 														Name = stack[162],
 														Active = stack[200],
@@ -1794,6 +1621,20 @@ index.CreateMainFrameYay = function(line)
 													})
 
 													createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, stack[115]), Parent = line.mainFrameYay })
+													line.customBackgroundImage = createInstance("ImageLabel", {
+													Name = "CustomBackgroundImage",
+													Image = "",
+													ImageColor3 = Color3.new(1, 1, 1),
+													ImageTransparency = 0.28,
+													BackgroundTransparency = 1,
+													Position = UDim2.new(0, 0, 0, 0),
+													Size = UDim2.new(1, 0, 1, 0),
+													ScaleType = Enum.ScaleType.Crop,
+													Visible = false,
+													ZIndex = 1,
+													Parent = line.mainFrameYay,
+													})
+													createInstance("UICorner", { Name = "CustomBackgroundCorner", CornerRadius = UDim.new(0, stack[115]), Parent = line.customBackgroundImage })
 													createInstance(stack[16], { Name = "MainFrameUIScale", Scale = 1, Parent = line.mainFrameYay })
 
 													line.dragBarThing = createInstance("Frame", {
@@ -1842,22 +1683,21 @@ index.CreateMainFrameYay = function(line)
 													end)
 
 													local knob = measureTextWidth(line.config.Name, stack[17], Enum.Font.GothamSemibold)
-local hubNameWidth = measureTextWidth("$ " .. line.config.Name, 26, Enum.Font.GothamSemibold)
 
 													line.hubNameLabel = createInstance(stack[65], {
 														Name = "HubNameGoesHere",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = Color3.new(1, stack[18], 1),
-														Text = "<font color=\"rgb(200,30,50)\">$</font> " .. line.config.Name,
+														Text = line.config.Name,
 RichText = true,
 														BackgroundColor3 = Color3.new(stack[18], 1, 1),
 														BackgroundTransparency = 1,
-														Position = UDim2.new(0, 19, 0, 14),
+														Position = UDim2.new(0, 14, 0, 14),
 														BorderSizePixel = 0,
 														BorderColor3 = Color3.new(),
-														TextSize = 30,
+														TextSize = 24,
 														Size = UDim2.new(0, 156, 0, 36),
-														TextXAlignment = Enum.TextXAlignment.Center,
+														TextXAlignment = Enum.TextXAlignment.Left,
 TextYAlignment = Enum.TextYAlignment.Center,
 														Parent = line.mainFrameYay,
 													})
@@ -1867,7 +1707,7 @@ TextYAlignment = Enum.TextYAlignment.Center,
 
 													line.userNameLabel = createInstance(stack[65], {
 														Name = "UserNameOfTheCoolPlayer",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = line.config.Colors.Muted,
 														Text = currentDate,
 														BackgroundColor3 = line.config.Colors.White,
@@ -1904,41 +1744,33 @@ TextYAlignment = Enum.TextYAlignment.Center,
 
 													createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(stack[18], 0), Parent = line.playerAvatarImg })
 
-													line.lineSeperator = createInstance("Frame", {
-														Name = "LineThatSeperates",
-														BackgroundColor3 = line.config.Colors.BorderSoft,
-														Position = UDim2.new(0, 19, 0, 64),
-														BorderColor3 = line.config.Colors.Black,
-														BorderSizePixel = 0,
-														Size = UDim2.new(0, 156, stack[33], 1),
-														Parent = line.mainFrameYay,
-													})
+																							-- LARP TITLE DIVIDER (abaixo do nome Larp, até o fim da UI)
+										local titleDivider = createInstance("Frame", {
+											Name = "TitleDivider",
+											BackgroundColor3 = line.config.Colors.BorderSoft,
+											BackgroundTransparency = 0.4,
+											BorderSizePixel = 0,
+											Position = UDim2.new(0, 19, 0, 52),
+											Size = UDim2.new(0, 715, 0, 1),
+											Parent = line.mainFrameYay,
+										})
+										-- END LARP TITLE DIVIDER
 
-													local packed = createInstance
-													local radians = stack[21]
-													local sourceTable = { Name = "UIGradient" }
-													local controller = ColorSequence.new
-													local players = {}
-													local angleRadians = ColorSequenceKeypoint.new(0, line.config.Colors.BorderSoft)
-													local track = ColorSequenceKeypoint.new(stack[69], line.config.Colors.AccentLight)
-													local instance4 = ColorSequenceKeypoint.new
-													local vertexCount = stack[18]
-													local response = line.config.Colors.BorderSoft
-													players[1] = angleRadians
-													players[2] = track
-
-													do
-														local argumentPack = table.pack(instance4(vertexCount, response))
-														table.move(argumentPack, 1, argumentPack.n, 3, players)
-													end
-
-													sourceTable.Color = controller(players)
-													sourceTable.Parent = line.lineSeperator
-													packed(radians, sourceTable)
-
-													line.tabNameLabel = createInstance("TextLabel", {
+																							-- LARP VERTICAL DIVIDER (sidebar | content)
+										local contentDivider = createInstance("Frame", {
+											Name = "ContentDivider",
+											BackgroundColor3 = line.config.Colors.BorderSoft,
+											BackgroundTransparency = 0.5,
+											BorderSizePixel = 0,
+											Position = UDim2.new(0, 186, 0, 70),
+							Size = UDim2.new(0, 1, 1, -70),
+											Parent = line.mainFrameYay,
+										})
+										-- END LARP VERTICAL DIVIDER
+										line.tabNameLabel = createInstance("TextLabel", {
 														Name = "TabNameGoesHere",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														Visible = false,
+FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = line.config.Colors.Text,
 														Text = "tab name",
 														BackgroundColor3 = line.config.Colors.White,
@@ -1954,7 +1786,8 @@ TextYAlignment = Enum.TextYAlignment.Center,
 
 													line.tabDescriptionLabel = createInstance(stack[65], {
 														Name = "TabDescriptionGoesHere",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														Visible = false,
+FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = line.config.Colors.Muted,
 														Text = "tab description",
 														BackgroundColor3 = line.config.Colors.White,
@@ -2045,34 +1878,52 @@ TextYAlignment = Enum.TextYAlignment.Center,
 														Parent = line.mainFrameYay,
 													})
 
--- ===== LARP PROFILE CARD (abaixo do Settings) =====
+-- ===== LARP PLAYER IDENTITY (abaixo das abas, sem cartão de fundo) =====
 do
 local profileColors = line.config.Colors
-
-local profileCard = createInstance("Frame", {
-Name = "LarpProfileCard",
-BackgroundColor3 = profileColors.Secondary,
+local playerNameRow = createInstance("Frame", {
+Name = "LarpPlayerNameRow",
+BackgroundTransparency = 1,
 BorderSizePixel = 0,
 LayoutOrder = 99999,
 Size = UDim2.new(0, 156, 0, 46),
-Parent = line.sectionHolderScroll,
+AnchorPoint = Vector2.new(0, 0),
+Position = UDim2.new(0, 11, 1, -54),
+Parent = line.mainFrameYay,
 })
 
-createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 7), Parent = profileCard })
-createInstance("UIStroke", { Name = "UIStroke", Color = profileColors.BorderSoft, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = profileCard })
-
-line.playerAvatarImg.Position = UDim2.new(0, 8, 0.5, -15)
+line.playerAvatarImg.Position = UDim2.new(0, 8, 0.5, -10)
 line.playerAvatarImg.Size = UDim2.new(0, 30, 0, 30)
-line.playerAvatarImg.Parent = profileCard
+line.playerAvatarImg.Visible = true
+line.playerAvatarImg.Parent = playerNameRow
+
+line.displayNameLabel = createInstance("TextLabel", {
+Name = "PlayerDisplayName",
+FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+TextColor3 = profileColors.Text,
+Text = localPlayer.DisplayName,
+BackgroundTransparency = 1,
+Position = UDim2.new(0, 46, 0, 10),
+BorderSizePixel = 0,
+TextSize = 14,
+Size = UDim2.new(1, -52, 0, 18),
+TextXAlignment = Enum.TextXAlignment.Left,
+TextYAlignment = Enum.TextYAlignment.Center,
+TextTruncate = Enum.TextTruncate.AtEnd,
+Parent = playerNameRow,
+})
 
 line.userNameLabel.Text = "@" .. localPlayer.Name
-line.userNameLabel.Position = UDim2.new(0, 46, 0, 0)
-line.userNameLabel.Size = UDim2.new(1, -52, 1, 0)
+line.userNameLabel.Position = UDim2.new(0, 46, 0, 28)
+line.userNameLabel.Size = UDim2.new(1, -52, 0, 17)
+line.userNameLabel.BackgroundTransparency = 1
 line.userNameLabel.TextColor3 = profileColors.SubText
+line.userNameLabel.TextSize = 12
 line.userNameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-line.userNameLabel.Parent = profileCard
+line.userNameLabel.TextYAlignment = Enum.TextYAlignment.Center
+line.userNameLabel.Parent = playerNameRow
 end
--- ===== END LARP PROFILE CARD =====
+-- ===== END LARP PLAYER IDENTITY =====
 
 -- ===== LARP SEARCH BAR =====
 do
@@ -2080,14 +1931,14 @@ local searchColors = line.config.Colors
 local function searchAccentColor()
 return line.config.AccentColor or searchColors.Accent
 end
-local searchFont = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+local searchFont = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
 line.searchTabs = line.searchTabs or {}
 
 local searchFrame = createInstance("Frame", {
 Name = "LarpSearchBar",
 BackgroundColor3 = searchColors.Element,
 BorderSizePixel = 0,
-Position = UDim2.new(0, 420, 0, 16),
+Position = UDim2.new(0, 249, 0, 16),
 Size = UDim2.new(0, 255, 0, 30),
 ZIndex = 5,
 Parent = line.mainFrameYay,
@@ -2136,7 +1987,7 @@ Name = "LarpSearchResults",
 Active = true,
 BackgroundColor3 = searchColors.Secondary,
 BorderSizePixel = 0,
-Position = UDim2.new(0, 420, 0, 50),
+Position = UDim2.new(0, 249, 0, 50),
 Size = UDim2.new(0, 255, 0, 46),
 CanvasSize = UDim2.new(0, 0, 0, 0),
 AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -2431,125 +2282,60 @@ end
 												line.notificationHolderFrame = createInstance("Frame", {
 													Name = "NotificationHolderForNotifs",
 													BackgroundTransparency = 1,
-													Position = UDim2.new(1, -stack[108], 0, 20),
-													AnchorPoint = Vector2.new(stack[18], 0),
-													Size = UDim2.new(0, stack[98], stack[33], 400),
+													Position = UDim2.new(1, -18, 1, -18),
+													AnchorPoint = Vector2.new(1, 1),
+													Size = UDim2.new(0, 300, stack[33], 390),
 													Parent = line.screenGuiYay,
 												})
 
 												createInstance("UIListLayout", {
 													Name = "UIListLayout",
-													Padding = UDim.new(stack[33], 10),
+													Padding = UDim.new(stack[33], 8),
 													SortOrder = Enum.SortOrder.LayoutOrder,
 													HorizontalAlignment = Enum.HorizontalAlignment.Right,
-													VerticalAlignment = Enum.VerticalAlignment.Top,
+													VerticalAlignment = Enum.VerticalAlignment.Bottom,
 													Parent = line.notificationHolderFrame,
 												})
 											end
 
 											index.Notify = function(line, object)
-												local sourceTable = object or {}
-												sourceTable.Title = tostring(sourceTable.Title or stack[74] or "Notification")
-												sourceTable.Duration = sourceTable.Duration or 3
-												sourceTable.Icon = sourceTable.Icon or "rbxassetid://10747361219"
-												local cosine = textService:GetTextSize(sourceTable.Title, 15, Enum.Font.GothamSemibold, Vector2.new(math.huge, 50))
-												local index54 = cosine and tonumber(cosine.X) or 0
-												local elapsedTime = math.max(127, index54 + 80)
-
-												local data = createInstance("Frame", {
-													Name = "NotificationYay",
-													BackgroundColor3 = line.config.Colors.Secondary,
-													Position = UDim2.new(1.5, 0, stack[33], 0),
-													BorderColor3 = line.config.Colors.Black,
-													BorderSizePixel = 0,
-													Size = UDim2.new(0, elapsedTime, 0, 50),
-													BackgroundTransparency = 1,
-													Parent = line.notificationHolderFrame,
-												})
-
-												createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 10), Parent = data })
-												createInstance("UIScale", { Name = "UIScale", Scale = 0.8, Parent = data })
-
-												local packed = createInstance(stack[170], {
-													Name = "PillIndicator",
-													BackgroundColor3 = line.config.AccentColor,
-													Position = UDim2.new(stack[33], 0, 0.22, 0),
-													BorderColor3 = line.config.Colors.Black,
-													BorderSizePixel = stack[33],
-													Size = UDim2.new(0, 6, 0, stack[185]),
-													Parent = data,
-												})
-
-												createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(1, stack[33]), Parent = packed })
-
-												createInstance("Frame", {
-													Name = "PillExtension",
-													BackgroundColor3 = line.config.AccentColor,
-													BorderColor3 = line.config.Colors.Black,
-													BorderSizePixel = 0,
-													Size = UDim2.new(0, 4, stack[33], 28),
-													Parent = packed,
-												})
-
-												local playerId = createInstance("ImageLabel", {
-													Name = stack[128],
-													BorderColor3 = line.config.Colors.Black,
-													BackgroundColor3 = line.config.Colors.White,
-													Image = sourceTable.Icon,
-													BackgroundTransparency = stack[18],
-													Position = UDim2.new(0, 15, 0.5, -10),
-													BorderSizePixel = stack[33],
-													Size = UDim2.new(stack[33], 20, 0, 20),
-													ImageTransparency = stack[18],
-													Parent = data,
-												})
-
-												createInstance("UIAspectRatioConstraint", { Name = "UIAspectRatioConstraint", Parent = playerId })
-
-												local radians = createInstance(stack[65], {
-													Name = "NotificationText",
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-													TextColor3 = line.config.Colors.Text,
-													Text = sourceTable.Title,
-													BackgroundColor3 = line.config.Colors.White,
-													BackgroundTransparency = 1,
-													Position = UDim2.new(0, 45, 0.5, -8.5),
-													BorderSizePixel = 0,
-													BorderColor3 = line.config.Colors.Black,
-													TextSize = 15,
-													Size = UDim2.new(0, index54 + 20, 0, 17),
-													TextXAlignment = Enum.TextXAlignment.Left,
-													TextTransparency = 1,
-													Parent = data,
-												})
-
-												local panel = data:FindFirstChild("UIScale")
-
-												task.defer(function()
-													tweenInstance(data, { Position = UDim2.new(stack[33], 0, 0, 0), BackgroundTransparency = 0 }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-													tweenInstance(panel, { Scale = 1 }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-													tweenInstance(playerId, { ImageTransparency = 0 }, stack[100], Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-													tweenInstance(radians, { TextTransparency = 0 }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-												end)
-
-												task.delay(sourceTable.Duration, function()
-													if data and data.Parent then
-														tweenInstance(data, { Position = UDim2.new(stack[122], 0, 0, 0), BackgroundTransparency = 1 }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-														tweenInstance(panel, { Scale = 0.8 }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-														tweenInstance(playerId, { ImageTransparency = 1 }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-														tweenInstance(radians, { TextTransparency = 1 }, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-														task.wait(0.5)
-
-														if data and data.Parent then
-															data:Destroy()
-														end
-													end
-												end)
-
-												return data
-											end
-
-											obj = setmetatable({}, { __mode = "k" })
+										local sourceTable = object or {}
+										sourceTable.Title = tostring(sourceTable.Title or stack[74] or "Notification")
+										sourceTable.Duration = tonumber(sourceTable.Duration) or 3
+										local endAt = os.time() + math.max(0, sourceTable.Duration)
+										local endText = "Ends at " .. os.date("%H:%M:%S", endAt)
+																				local feature, status = sourceTable.Title, ""
+										local state, rest = sourceTable.Title:match("^(Enabled)%s+(.+)$")
+										if not state then state, rest = sourceTable.Title:match("^(Disabled)%s+(.+)$") end
+										if state and rest then feature, status = rest, state end
+										local data = createInstance("Frame", { Name = "NotificationYay", BackgroundColor3 = Color3.fromRGB(14, 15, 20), BackgroundTransparency = 0.04, Position = UDim2.new(1, 30, stack[33], 0), BorderSizePixel = 0, Size = UDim2.new(0, 245, 0, 72), ClipsDescendants = true, Parent = line.notificationHolderFrame })
+										createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 8), Parent = data })
+										createInstance("UIStroke", { Name = "UIStroke", Color = Color3.fromRGB(70, 72, 82), Transparency = 0.35, Thickness = 1, Parent = data })
+										local titleLabel = createInstance("TextLabel", { Name = "NotificationTitle", FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal), TextColor3 = Color3.fromRGB(245, 245, 248), Text = feature, BackgroundTransparency = 1, Position = UDim2.new(0, 14, 0, 9), Size = UDim2.new(1, -28, 0, 20), TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, TextTransparency = 1, Parent = data })
+										local statusLabel = createInstance("TextLabel", { Name = "NotificationStatus", FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal), TextColor3 = Color3.fromRGB(166, 168, 178), Text = status, BackgroundTransparency = 1, Position = UDim2.new(0, 14, 0, 31), Size = UDim2.new(1, -28, 0, 15), TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, TextTransparency = 1, Parent = data })
+										local endLabel = createInstance("TextLabel", { Name = "NotificationEndTime", FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal), TextColor3 = Color3.fromRGB(125, 128, 140), Text = endText, BackgroundTransparency = 1, Position = UDim2.new(0, 14, 0, 49), Size = UDim2.new(1, -28, 0, 14), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, TextTransparency = 1, Parent = data })
+										local progressLine = createInstance("Frame", { Name = "NotificationProgress", BackgroundColor3 = Color3.fromRGB(243, 166, 52), BorderSizePixel = 0, AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 2), Parent = data })
+										task.defer(function()
+											tweenInstance(data, { Position = UDim2.new(0, 0, 0, 0) }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+											tweenInstance(titleLabel, { TextTransparency = 0 }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+											tweenInstance(statusLabel, { TextTransparency = status == "" and 1 or 0 }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+											tweenInstance(endLabel, { TextTransparency = 0 }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+										task.spawn(function()
+											tweenInstance(progressLine, { Size = UDim2.new(0, 0, 0, 2) }, sourceTable.Duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+											end)
+										end)
+										task.delay(sourceTable.Duration, function()
+											if not data or not data.Parent then return end
+											tweenInstance(data, { Position = UDim2.new(1, 30, 0, 0) }, 0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+											tweenInstance(titleLabel, { TextTransparency = 1 }, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+											tweenInstance(statusLabel, { TextTransparency = 1 }, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+											tweenInstance(endLabel, { TextTransparency = 1 }, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+											task.wait(0.32)
+											if data and data.Parent then data:Destroy() end
+										end)
+										return data
+										end
+									obj = setmetatable({}, { __mode = "k" })
 											knob = nil
 											currentDate = nil
 
@@ -2634,7 +2420,7 @@ end
 
 												sourceTable.labelText = createInstance(stack[65], {
 													Name = "ToggleLabel",
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = sourceTable.value and line.Library.config.Colors.Text or line.Library.config.Colors.SubText,
 													Text = object.Name,
 													BackgroundColor3 = line.Library.config.Colors.White,
@@ -2872,7 +2658,7 @@ end
 
 												sourceTable.labelText = createInstance("TextLabel", {
 													Name = "SliderLabel",
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = line.Library.config.Colors.SubText,
 													Text = object.Name,
 													BackgroundTransparency = 1,
@@ -2931,9 +2717,9 @@ end
 
 												sourceTable.valueBox = createInstance("TextBox", {
 													Name = "SliderValueBox",
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = line.Library.config.Colors.SubText,
-													Text = initialize(sourceTable.value) .. " / " .. initialize(object.Max),
+													Text = initialize(sourceTable.value),
 													PlaceholderText = "",
 													ClearTextOnFocus = true,
 													TextEditable = true,
@@ -2942,7 +2728,7 @@ end
 													BorderSizePixel = 0,
 													TextSize = stack[46],
 													Size = UDim2.new(0, 85, stack[33], stack[108]),
-													TextXAlignment = Enum.TextXAlignment.Right,
+													TextXAlignment = Enum.TextXAlignment.Center,
 													Parent = line.mainFrame,
 												})
 
@@ -3011,7 +2797,7 @@ end
 													serializeTable()
 
 													if not top then
-														sourceTable.valueBox.Text = initialize(yString) .. " / " .. initialize(object.Max)
+														sourceTable.valueBox.Text = initialize(yString)
 													end
 
 													if not object.NoSave then
@@ -3189,7 +2975,7 @@ end
 
 												sourceTable.labelText = createInstance("TextLabel", {
 													Name = "DoubleSliderLabel",
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = line.Library.config.Colors.SubText,
 													Text = object.Name,
 													BackgroundTransparency = 1,
@@ -3204,7 +2990,7 @@ end
 												sourceTable.valueLabelText = createInstance("TextLabel", {
 													Name = "DoubleSliderValueLabel",
 													AnchorPoint = Vector2.new(1, 0),
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = line.Library.config.Colors.SubText,
 													Text = "",
 													BackgroundTransparency = 1,
@@ -3212,7 +2998,7 @@ end
 													BorderSizePixel = 0,
 													TextSize = stack[46],
 													Size = UDim2.new(0, 85, stack[33], stack[108]),
-													TextXAlignment = Enum.TextXAlignment.Right,
+													TextXAlignment = Enum.TextXAlignment.Center,
 													Parent = line.mainFrame,
 												})
 
@@ -3590,7 +3376,7 @@ end
 
 											sourceTable.labelText = createInstance("TextLabel", {
 												Name = "ButtonLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = sourceTable.isLocked and line.Library.config.Colors.Muted or line.Library.config.Colors.SubText,
 												Text = object.Name .. (sourceTable.isLocked and " (locked)" or ""),
 												BackgroundColor3 = line.Library.config.Colors.White,
@@ -3600,7 +3386,7 @@ end
 												BorderColor3 = line.Library.config.Colors.Black,
 												TextSize = 14,
 												Size = UDim2.new(1, -elapsedTime - 10, 1, 0),
-												TextXAlignment = Enum.TextXAlignment.Left,
+												TextXAlignment = Enum.TextXAlignment.Center,
 												Parent = sourceTable.mainFrame,
 											})
 
@@ -3698,7 +3484,7 @@ end
 
 											sourceTable.labelText = createInstance(stack[65], {
 												Name = "KeybindLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = object.Name,
 												BackgroundColor3 = line.Library.config.Colors.White,
@@ -3718,14 +3504,14 @@ end
 											sourceTable.buttonFrame = createInstance("Frame", {
 												Name = "KeybindButton",
 												BackgroundColor3 = line.Library.config.Colors.Element,
-												Position = UDim2.new(1, -elapsedTime - 10, stack[33], config),
+												Position = UDim2.new(1, -102, stack[33], config),
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = stack[33],
-												Size = UDim2.new(0, elapsedTime, stack[33], 21),
+												Size = UDim2.new(0, 92, stack[33], 24),
 												Parent = line.mainFrame,
 											})
 
-											createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(1, stack[33]), Parent = sourceTable.buttonFrame })
+											createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(0, 6), Parent = sourceTable.buttonFrame })
 											local j = createInstance("UIStroke", { Name = stack[131], Color = line.Library.config.Colors.BorderSoft, Parent = sourceTable.buttonFrame })
 											local packed = createInstance
 											local players = { Name = stack[21] }
@@ -3750,35 +3536,32 @@ end
 
 											sourceTable.keyLabelText = createInstance("TextLabel", {
 												Name = "KeyLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = query,
 												BackgroundColor3 = line.Library.config.Colors.White,
-												BackgroundTransparency = 1,
-												Position = UDim2.new(stack[33], stack[33], 0, stack[33]),
+												BackgroundTransparency = 0,
+												Position = UDim2.new(stack[33], 4, 0, stack[33]),
 												BorderSizePixel = 0,
 												BorderColor3 = Color3.new(),
 												TextSize = 12,
-												Size = UDim2.new(stack[18], -20, stack[18], stack[33]),
+												Size = UDim2.new(1, -8, 1, stack[33]),
 												TextXAlignment = Enum.TextXAlignment.Center,
 												Parent = sourceTable.buttonFrame,
 											})
 
-											sourceTable.keyboardIconImg = createInstance("ImageLabel", {
-												Name = "KeyboardIcon",
-												ImageColor3 = line.Library.config.Colors.Muted,
-												BackgroundColor3 = line.Library.config.Colors.White,
-												Image = "rbxassetid://10723416765",
-												BackgroundTransparency = 1,
-												Position = UDim2.new(1, -18, 0.5, -7),
-												BorderColor3 = Color3.new(),
-												BorderSizePixel = 0,
-												Size = UDim2.new(0, 14, 0, 14),
-												Parent = sourceTable.buttonFrame,
-											})
-
-											createInstance("UIAspectRatioConstraint", { Name = "UIAspectRatioConstraint", Parent = sourceTable.keyboardIconImg })
-
+											sourceTable.keybindIndicator = createInstance("TextLabel", {
+													Name = "KeybindIndicator",
+													Text = "-",
+													TextColor3 = line.Library.config.Colors.Muted,
+													TextSize = 14,
+													TextXAlignment = Enum.TextXAlignment.Center,
+													BackgroundTransparency = 1,
+													Position = UDim2.new(1, -18, 0.5, -7),
+													BorderSizePixel = 0,
+													Size = UDim2.new(0, 14, 0, 14),
+													Parent = sourceTable.buttonFrame,
+																						})
 											local button = createInstance("TextButton", {
 												Name = "KeybindClickButton",
 												Text = "",
@@ -3788,8 +3571,8 @@ end
 											})
 
 											local function mainLoop(descendant)
-												local difference = measureTextWidth(descendant, stack[49]) + 26
-												tweenInstance(sourceTable.buttonFrame, { Size = UDim2.new(stack[33], difference, stack[33], 21), Position = UDim2.new(1, -difference - stack[115], 0, config) }, 0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
+												local difference = 92
+												tweenInstance(sourceTable.buttonFrame, { Size = UDim2.new(stack[33], difference, stack[33], 24), Position = UDim2.new(1, -102, 0, config) }, 0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 											end
 
 											sourceTable.Set = function(descendant, player29)
@@ -3819,7 +3602,7 @@ end
 													tweenInstance(sourceTable.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.ElementHover }, 0.4)
 													tweenInstance(j, { Color = line.Library.config.Colors.Border }, 0.4)
 													tweenInstance(sourceTable.keyLabelText, { TextColor3 = line.Library.config.Colors.TextHover }, stack[139])
-													tweenInstance(sourceTable.keyboardIconImg, { ImageColor3 = line.Library.config.Colors.TextHover }, 0.4)
+													tweenInstance(sourceTable.keybindIndicator, { TextColor3 = line.Library.config.Colors.TextHover }, 0.4)
 												end
 											end)
 
@@ -3835,7 +3618,7 @@ end
 													tweenInstance(sourceTable.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Element }, 0.4)
 													tweenInstance(j, { Color = line.Library.config.Colors.BorderSoft }, stack[139])
 													tweenInstance(sourceTable.keyLabelText, { TextColor3 = line.Library.config.Colors.SubText }, 0.4)
-													tweenInstance(sourceTable.keyboardIconImg, { ImageColor3 = line.Library.config.Colors.Muted }, stack[139])
+													tweenInstance(sourceTable.keybindIndicator, { TextColor3 = line.Library.config.Colors.Muted }, stack[139])
 													return
 												end
 
@@ -3853,7 +3636,7 @@ end
 													tweenInstance(sourceTable.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.ElementHover }, 0.4)
 													tweenInstance(j, { Color = line.Library.config.Colors.Border }, 0.4)
 													tweenInstance(sourceTable.keyLabelText, { TextColor3 = line.Library.config.Colors.TextHover }, 0.4)
-													tweenInstance(sourceTable.keyboardIconImg, { ImageColor3 = line.Library.config.Colors.TextHover }, 0.4)
+													tweenInstance(sourceTable.keybindIndicator, { TextColor3 = line.Library.config.Colors.TextHover }, 0.4)
 												end
 											end)
 
@@ -3862,7 +3645,7 @@ end
 													tweenInstance(sourceTable.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Element }, 0.4)
 													tweenInstance(j, { Color = line.Library.config.Colors.BorderSoft }, 0.4)
 													tweenInstance(sourceTable.keyLabelText, { TextColor3 = line.Library.config.Colors.SubText }, 0.4)
-													tweenInstance(sourceTable.keyboardIconImg, { ImageColor3 = line.Library.config.Colors.Muted }, 0.4)
+													tweenInstance(sourceTable.keybindIndicator, { TextColor3 = line.Library.config.Colors.Muted }, 0.4)
 												end
 											end)
 
@@ -3931,16 +3714,17 @@ end
 
 											sourceTable.labelText = createInstance("TextLabel", {
 												Name = "DropdownLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = object.Name,
 												BackgroundColor3 = line.Library.config.Colors.White,
 												BackgroundTransparency = 1,
-												Position = UDim2.new(0, 10, stack[33], config),
-												BorderSizePixel = stack[33],
+															-- Layout igual ao modelo da referência: rótulo em cima do campo.
+															Position = UDim2.new(0, 10, stack[33], config),
+															BorderSizePixel = stack[33],
 												BorderColor3 = Color3.new(),
 												TextSize = 14,
-												Size = UDim2.new(0, packed, 0, 20),
+														Size = UDim2.new(1, -20, 0, 18),
 												TextXAlignment = Enum.TextXAlignment.Left,
 												TextTruncate = Enum.TextTruncate.AtEnd,
 												Parent = line.mainFrame,
@@ -3960,19 +3744,19 @@ end
 											
 											local function initialize(descendant, radius)
 												local currentScale = line.Library.dropdownHolderScale and line.Library.dropdownHolderScale.Scale or 1
-												local targetSize = UDim2.new(stack[33], radius, 0, stack[161])
+														local targetSize = UDim2.new(1, -20, 0, 30)
 												local players = { Size = targetSize }
 
 												if not sourceTable.detached then
-													players.Position = UDim2.new(stack[18], -radius - 10, 0, config)
+															players.Position = UDim2.new(stack[33], 10, 0, config + 22)
 												end
 
 												if sourceTable.dockFrame then
 													sourceTable.dockFrame.Size = targetSize
-													sourceTable.dockFrame.Position = UDim2.new(1, -radius - 10, 0, config)
+															sourceTable.dockFrame.Position = UDim2.new(stack[33], 10, 0, config + 22)
 												end
 
-												tweenInstance(sourceTable.labelText, { Size = UDim2.new(0, descendant, 0, 20) }, 0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
+														tweenInstance(sourceTable.labelText, { Size = UDim2.new(1, -20, 0, 18) }, 0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 												tweenInstance(sourceTable.buttonFrame, players, 0.3, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
 												if sourceTable.isOpen then
@@ -4032,10 +3816,10 @@ end
 												Name = "DropdownButton",
 												Active = stack[200],
 												BackgroundColor3 = line.Library.config.Colors.Element,
-												Position = UDim2.new(1, -radians - stack[115], 0, config),
+														Position = UDim2.new(stack[33], 10, 0, config + 22),
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
-												Size = UDim2.new(stack[33], radians, 0, 21),
+														Size = UDim2.new(1, -20, 0, 30),
 												Parent = line.mainFrame,
 											})
 
@@ -4064,7 +3848,7 @@ end
 
 											sourceTable.selectedLabelText = createInstance("TextLabel", {
 												Name = "SelectedLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = currentDate,
 												BackgroundColor3 = line.Library.config.Colors.White,
@@ -4150,7 +3934,7 @@ end
 
 												sourceTable.searchBox = createInstance("TextBox", {
 													Name = stack[194],
-													FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+													FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 													TextColor3 = line.Library.config.Colors.Text,
 													PlaceholderText = "search...",
 													PlaceholderColor3 = line.Library.config.Colors.Muted,
@@ -4231,7 +4015,7 @@ end
 
 													createInstance(stack[65], {
 														Name = "TruncationHint",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = line.Library.config.Colors.Muted,
 														Text = "... and " .. openError .. " more (use search)",
 														BackgroundTransparency = 1,
@@ -4265,7 +4049,7 @@ end
 
 													local textLabel = createInstance("TextLabel", {
 														Name = stack[121],
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = active and line.Library.config.Colors.AccentLight or line.Library.config.Colors.SubText,
 														Text = propertyName,
 														BackgroundColor3 = line.Library.config.Colors.White,
@@ -4773,7 +4557,7 @@ end
 												end)
 											end
 
-											line.elementYPos = line.elementYPos + 28
+														line.elementYPos = line.elementYPos + 60
 											success10()
 											table.insert(line.elementsInGroup, sourceTable)
 											return sourceTable
@@ -4803,7 +4587,7 @@ end
 
 											sourceTable.labelText = createInstance("TextLabel", {
 												Name = "TextboxLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = object.Name,
 												BackgroundColor3 = line.Library.config.Colors.White,
@@ -4820,7 +4604,7 @@ end
 											sourceTable.inputFrame = createInstance("Frame", {
 												Name = stack[87],
 												BackgroundColor3 = line.Library.config.Colors.Element,
-												Position = UDim2.new(stack[33], 10, 0, config + 22),
+												Position = UDim2.new(stack[33], 0, 0, config + 22),
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
 												Size = UDim2.new(0, 238, 0, 26),
@@ -4852,7 +4636,7 @@ end
 
 											sourceTable.textbox = createInstance(stack[9], {
 												Name = "TextboxInput",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.Text,
 												PlaceholderColor3 = line.Library.config.Colors.SubText,
 												Text = sourceTable.value,
@@ -4861,10 +4645,10 @@ end
 												Position = UDim2.new(0, 8, 0, stack[33]),
 												BorderSizePixel = stack[33],
 												BorderColor3 = Color3.new(),
-												TextSize = 14,
-												Size = UDim2.new(1, -30, 1, 0),
-												TextXAlignment = Enum.TextXAlignment.Left,
-												ClearTextOnFocus = stack[101],
+																				TextSize = 14,
+																				Size = UDim2.new(1, -30, 1, 0),
+																				TextXAlignment = Enum.TextXAlignment.Center,
+																				ClearTextOnFocus = stack[101],
 												TextEditable = true,
 												Parent = sourceTable.inputFrame,
 											})
@@ -5097,7 +4881,7 @@ end
 
 											local bottomSnapZone = createInstance(stack[170], {
 												Name = "SectionAccentBar",
-												BackgroundColor3 = line.Library.config.AccentColor,
+												BackgroundColor3 = line.Library.config.Colors.Element,
 												BorderSizePixel = stack[33],
 												Position = UDim2.new(stack[33], 10, 0, elapsedTime + 4),
 												Size = UDim2.new(stack[33], stack[70], stack[33], stack[49]),
@@ -5118,7 +4902,7 @@ end
 
 											createInstance("TextLabel", {
 												Name = "SectionLabel",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.Text,
 												Text = object,
 												BackgroundTransparency = stack[18],
@@ -5152,7 +4936,7 @@ end
 
 											local bottomSnapZone = createInstance(stack[65], {
 												Name = stack[60],
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.SubText,
 												Text = object.Text,
 												BackgroundColor3 = line.Library.config.Colors.White,
@@ -5177,17 +4961,18 @@ end
 											object.Name = object.Name or stack[1]
 											object.Side = object.Side or "Left"
 											object.Icon = object.Icon or "rbxassetid://10723427199"
-											local sourceTable = { elementsInGroup = {}, Library = line.Library, elementYPos = 35 }
+											local sourceTable = { elementsInGroup = {}, Library = line.Library, elementYPos = 35, isCollapsed = true }
 											local overlayFrame = object.Side == stack[150] and line.leftColumnFrame or line.rightColumnFrame
 
 											sourceTable.mainFrame = createInstance("Frame", {
 												Name = stack[176],
 												Active = false, -- mobile: Active=true engolia o toque e impedia o scroll por arrasto
-												BackgroundColor3 = line.Library.config.Colors.Secondary,
+												ClipsDescendants = true,
+												BackgroundColor3 = line.Library.config.Colors.Surface,
 												Position = UDim2.new(0, stack[18], 0, 0),
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
-												Size = UDim2.new(0, 262, 0, 50),
+												Size = UDim2.new(0, 262, 0, 35),
 												Parent = overlayFrame,
 											})
 
@@ -5199,12 +4984,13 @@ end
 												ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 												Parent = sourceTable.mainFrame,
 											})
-											createInstance(stack[137], { Name = stack[137], CornerRadius = UDim.new(0, 8), Parent = sourceTable.mainFrame })
+											createInstance(stack[137], { Name = stack[137], CornerRadius = UDim.new(0, 10), Parent = sourceTable.mainFrame })
 
 											createInstance("UIAspectRatioConstraint", {
 												Name = "UIAspectRatioConstraint",
 												Parent = createInstance("ImageLabel", {
 													Name = "GroupIcon",
+													Visible = false,
 													BorderColor3 = line.Library.config.Colors.Black,
 													BackgroundColor3 = line.Library.config.Colors.White,
 													Image = object.Icon,
@@ -5218,12 +5004,12 @@ end
 
 											createInstance("TextLabel", {
 												Name = "GroupName",
-												FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+												FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 												TextColor3 = line.Library.config.Colors.Text,
 												Text = object.Name,
 												BackgroundColor3 = line.Library.config.Colors.White,
 												BackgroundTransparency = 1,
-												Position = UDim2.new(0, 32, stack[33], stack[35]),
+												Position = UDim2.new(0, 10, stack[33], stack[35]),
 												BorderSizePixel = 0,
 												BorderColor3 = Color3.new(),
 												TextSize = 15,
@@ -5233,7 +5019,7 @@ end
 											})
 
 											local function clampValue(descendant)
-												local elapsedTime = sourceTable.elementYPos + 10
+												local elapsedTime = sourceTable.isCollapsed and 35 or (sourceTable.elementYPos + 10)
 
 												if descendant and descendant > stack[33] then
 													tweenInstance(sourceTable.mainFrame, { Size = UDim2.new(0, 262, 0, elapsedTime) }, descendant, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -5243,6 +5029,36 @@ end
 											end
 
 											sourceTable.UpdateSize = clampValue
+
+											createInstance("TextButton", {
+												Name = "GroupHeaderButton",
+												Text = "",
+												AutoButtonColor = false,
+												BackgroundTransparency = 1,
+												Size = UDim2.new(1, 0, 0, 32),
+												Parent = sourceTable.mainFrame,
+											}).MouseButton1Click:Connect(function()
+												local opening = sourceTable.isCollapsed
+												sourceTable.isCollapsed = not sourceTable.isCollapsed
+
+												if opening and offset and offset.Name == "Main" then
+													-- Deixa somente as configurações da função escolhida abertas.
+													for _, otherGroup in ipairs(line.groupsInTab) do
+														if otherGroup ~= sourceTable and not otherGroup.isCollapsed then
+															otherGroup.isCollapsed = true
+															otherGroup.UpdateSize(0.25)
+														end
+													end
+
+													-- O primeiro controle do grupo é a função principal.
+													local primaryToggle = sourceTable.elementsInGroup[1]
+													if primaryToggle and primaryToggle.Set then
+														primaryToggle:Set(true)
+													end
+												end
+
+												clampValue(0.25)
+											end)
 
 											obj[sourceTable] = {
 												TabConfig = offset,
@@ -5303,9 +5119,9 @@ end
 
 													sample.label = createInstance("TextLabel", {
 														Name = "KeybindLabel",
-														FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+														FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 														TextColor3 = radians == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
-														Text = query,
+														Text = "",
 														BackgroundTransparency = 1,
 														Position = UDim2.new(0, 4, 0, 0),
 														BorderSizePixel = 0,
@@ -5316,22 +5132,19 @@ end
 														Parent = sample.frame,
 													})
 
-													sample.keyboardIconImg = createInstance("ImageLabel", {
-														Name = "KeyboardIcon",
-														ImageColor3 = radians == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
-														BackgroundColor3 = sourceTable.Library.config.Colors.White,
-														Image = "rbxassetid://10723416765",
-														BackgroundTransparency = stack[18],
-														Position = radians == Enum.KeyCode.Unknown and UDim2.new(0.5, -5, 0.5, -5) or UDim2.new(1, -15, 0.5, -5),
-														BorderColor3 = Color3.new(),
-														BorderSizePixel = 0,
-														Size = UDim2.new(0, stack[192], stack[33], stack[192]),
-														ZIndex = (color or 5) + 1,
-														Parent = sample.frame,
-													})
-
-													createInstance("UIAspectRatioConstraint", { Name = "UIAspectRatioConstraint", Parent = sample.keyboardIconImg })
-
+													sample.keybindIndicator = createInstance("TextLabel", {
+													Name = "KeybindIndicator",
+													Text = query == "" and "-" or query,
+													TextColor3 = sourceTable.Library.config.Colors.SubText,
+													TextSize = 11,
+													TextXAlignment = Enum.TextXAlignment.Center,
+													BackgroundTransparency = 1,
+													Position = UDim2.new(0, 4, 0, 0),
+													BorderSizePixel = 0,
+													Size = UDim2.new(1, -8, 1, 0),
+													ZIndex = (color or 5) + 1,
+													Parent = sample.frame,
+																						})
 													local vertexCount = createInstance(stack[39], {
 														Name = "KeybindHitbox",
 														Text = "",
@@ -5400,13 +5213,14 @@ end
 														local elapsedTime = sample.frame.AbsolutePosition + Vector2.new(sample.frame.AbsoluteSize.X + 8, -stack[72])
 														depth = depth or elapsedTime
 
-														data = createInstance("Frame", {
-															Name = "KeybindModeWindow",
-															BackgroundColor3 = sourceTable.Library.config.Colors.Secondary,
+									data = createInstance("Frame", {
+										Name = "KeybindModeWindow",
+										BackgroundColor3 = sourceTable.Library.config.Colors.Secondary,
 															Position = UDim2.new(stack[33], depth.X, 0, depth.Y),
 															BorderColor3 = sourceTable.Library.config.Colors.Black,
 															BorderSizePixel = 0,
-															Size = UDim2.new(stack[33], 112, stack[33], stack[97]),
+										-- O seletor de modo usa o mesmo painel compacto dos dropdowns.
+										Size = UDim2.new(stack[33], 144, stack[33], 72),
 															ZIndex = 20000,
 															Parent = sourceTable.Library.dropdownHolderRef,
 														})
@@ -5415,19 +5229,19 @@ end
 														createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(stack[33], 8), Parent = data })
 														createInstance("UIStroke", { Name = "UIStroke", Color = sourceTable.Library.config.Colors.BorderSoft, Parent = data })
 
-														local playerIdentifier = createInstance("Frame", {
-															Name = "ModeHolder",
-															BackgroundTransparency = stack[18],
-															Position = UDim2.new(0, stack[174], 0, 5),
-															Size = UDim2.new(1, -10, 1, -10),
+									local playerIdentifier = createInstance("Frame", {
+										Name = "ModeHolder",
+										BackgroundTransparency = stack[18],
+										Position = UDim2.new(0, 8, 0, 7),
+										Size = UDim2.new(1, -16, 1, -14),
 															ZIndex = 20001,
 															Parent = data,
 														})
 
-														createInstance("UIListLayout", {
-															Name = "ModeList",
-															FillDirection = Enum.FillDirection.Horizontal,
-															Padding = UDim.new(0, 6),
+									createInstance("UIListLayout", {
+										Name = "ModeList",
+										FillDirection = Enum.FillDirection.Vertical,
+										Padding = UDim.new(0, 4),
 															SortOrder = Enum.SortOrder.LayoutOrder,
 															Parent = playerIdentifier,
 														})
@@ -5436,12 +5250,12 @@ end
 															Name = "HoldMode",
 															Text = "Hold",
 															AutoButtonColor = false,
-															FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+															FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 															TextSize = stack[49],
-															TextColor3 = sourceTable.Library.config.Colors.Text,
-															BackgroundColor3 = sourceTable.Library.config.Colors.Element,
-															BorderSizePixel = stack[33],
-															Size = UDim2.new(0.5, -stack[61], stack[18], 0),
+										TextColor3 = sourceTable.Library.config.Colors.Text,
+										BackgroundColor3 = sourceTable.Library.config.Colors.Element,
+										BorderSizePixel = stack[33],
+										Size = UDim2.new(1, 0, 0, 27),
 															ZIndex = 20002,
 															Parent = playerIdentifier,
 														})
@@ -5450,12 +5264,12 @@ end
 															Name = "ToggleMode",
 															Text = stack[4],
 															AutoButtonColor = false,
-															FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+															FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 															TextSize = 12,
-															TextColor3 = sourceTable.Library.config.Colors.Text,
-															BackgroundColor3 = sourceTable.Library.config.Colors.Element,
-															BorderSizePixel = 0,
-															Size = UDim2.new(0.5, -3, 1, 0),
+										TextColor3 = sourceTable.Library.config.Colors.Text,
+										BackgroundColor3 = sourceTable.Library.config.Colors.Element,
+										BorderSizePixel = 0,
+										Size = UDim2.new(1, 0, 0, 27),
 															ZIndex = 20002,
 															Parent = playerIdentifier,
 														})
@@ -5516,14 +5330,15 @@ end
 													sample.Set = function(depth, command)
 														local cacheKey = command == Enum.KeyCode.Unknown and "" or tbl12.Display(command)
 														local major = mainLoop(cacheKey)
-														sample.label.Text = cacheKey
+														sample.label.Text = ""
 
-														tweenInstance(sample.frame, {
-															Size = UDim2.new(0, major, 0, angleRadians),
+																tweenInstance(sample.frame, {
+																	Size = UDim2.new(0, major, 0, angleRadians),
 															Position = onInputBegan(major),
 															BackgroundColor3 = command == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Surface or sourceTable.Library.config.Colors.Element,
 															BackgroundTransparency = command == Enum.KeyCode.Unknown and 1 or 0,
-														}, 0.25, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
+																}, 0.25, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
+															sample.keybindIndicator.Text = cacheKey == "" and "-" or cacheKey
 
 														tweenInstance(sample.label, {
 															TextColor3 = command == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
@@ -5534,9 +5349,9 @@ end
 															Transparency = command == Enum.KeyCode.Unknown and 0.35 or 0,
 														}, 0.2)
 
-														tweenInstance(sample.keyboardIconImg, {
-															Position = command == Enum.KeyCode.Unknown and UDim2.new(0.5, -5, 0.5, -5) or UDim2.new(1, -15, 0.5, -5),
-															ImageColor3 = command == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
+														tweenInstance(sample.keybindIndicator, {
+															Position = UDim2.new(0, 4, 0, 0),
+																	TextColor3 = command == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
 														}, 0.2)
 													end
 
@@ -5544,9 +5359,9 @@ end
 														sample:Set(depth)
 													end)
 
-													sample.Listen = function()
+															 sample.Listen = function()
 														initialize()
-														sample.label.Text = "..."
+														sample.label.Text = ""
 														local major = mainLoop("...")
 
 														tweenInstance(sample.frame, {
@@ -5558,7 +5373,7 @@ end
 
 														tweenInstance(sample.label, { TextColor3 = sourceTable.Library.config.Colors.TextHover }, 0.2)
 														tweenInstance(err, { Color = sourceTable.Library.config.Colors.Border, Transparency = stack[33] }, 0.2)
-														tweenInstance(sample.keyboardIconImg, { Position = UDim2.new(1, -15, 0.5, -5), ImageColor3 = sourceTable.Library.config.Colors.TextHover }, 0.2)
+														tweenInstance(sample.keybindIndicator, { Position = UDim2.new(0, 4, 0, 0), TextColor3 = sourceTable.Library.config.Colors.TextHover }, 0.2)
 
 														tbl12.BeginListen(radius, function(depth)
 															sample:Set(depth)
@@ -5594,7 +5409,7 @@ end
 														tweenInstance(sample.frame, { BackgroundColor3 = sourceTable.Library.config.Colors.ElementHover, BackgroundTransparency = 0 }, 0.2)
 														tweenInstance(sample.label, { TextColor3 = sourceTable.Library.config.Colors.TextHover }, 0.2)
 														tweenInstance(err, { Color = sourceTable.Library.config.Colors.Border, Transparency = 0 }, 0.2)
-														tweenInstance(sample.keyboardIconImg, { ImageColor3 = sourceTable.Library.config.Colors.TextHover }, stack[113])
+														tweenInstance(sample.keybindIndicator, { TextColor3 = sourceTable.Library.config.Colors.TextHover }, stack[113])
 													end)
 
 													vertexCount.MouseLeave:Connect(function()
@@ -5614,8 +5429,8 @@ end
 															Transparency = major == Enum.KeyCode.Unknown and 0.35 or 0,
 														}, 0.2)
 
-														tweenInstance(sample.keyboardIconImg, {
-															ImageColor3 = major == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
+														tweenInstance(sample.keybindIndicator, {
+																	TextColor3 = major == Enum.KeyCode.Unknown and sourceTable.Library.config.Colors.Muted or sourceTable.Library.config.Colors.SubText,
 														}, 0.2)
 													end)
 
@@ -5662,7 +5477,7 @@ end
 											buttonFrame = createInstance("Frame", {
 												Name = "TabButton",
 												Active = false,
-												BackgroundColor3 = line.Library.config.AccentColor,
+												BackgroundColor3 = line.Library.config.Colors.Element,
 												BackgroundTransparency = 1,
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
@@ -5671,26 +5486,43 @@ end
 											}),
 										}
 
-										createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 7), Parent = firstElement.buttonFrame })
+											createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 7), Parent = firstElement.buttonFrame })
+											firstElement.buttonStroke = createInstance("UIStroke", {
+												Name = "TabStroke",
+												Color = line.Library.config.Colors.BorderSoft,
+												Transparency = 1,
+												Thickness = 1,
+												ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+												Parent = firstElement.buttonFrame,
+											})
 
-										firstElement.iconImg = createInstance("TextLabel", {
-Name = "TabIcon",
-FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
-TextColor3 = line.Library.config.Colors.Muted,
-Text = "$",
-BackgroundTransparency = 1,
-Position = UDim2.new(0, 9, 0.5, -7),
-BorderSizePixel = 0,
-TextSize = 17,
-TextXAlignment = Enum.TextXAlignment.Center,
-TextYAlignment = Enum.TextYAlignment.Center,
-Size = UDim2.new(0, 14, 0, 14),
-Parent = firstElement.buttonFrame,
-})
+											firstElement.iconImg = createInstance("ImageLabel", {
+												Name = "TabIcon",
+												Image = object.Icon,
+												ImageColor3 = line.Library.config.Colors.Muted,
+												BackgroundTransparency = 1,
+												Position = UDim2.new(0, 9, 0.5, -7.14),
+												BorderSizePixel = 0,
+												Size = UDim2.new(0, 14.28, 0, 14.28),
+												ScaleType = Enum.ScaleType.Fit,
+												Parent = firstElement.buttonFrame,
+											})
 
-										firstElement.nameLabel = createInstance("TextLabel", {
+											firstElement.activeBar = createInstance("Frame", {
+												Name = "ActiveTabBar",
+												BackgroundColor3 = line.Library.config.Colors.Text,
+												BackgroundTransparency = 1,
+												Position = UDim2.new(0, 0, 0.5, -8),
+												Size = UDim2.new(0, 2, 0, 16),
+												BorderSizePixel = 0,
+												ZIndex = 3,
+												Parent = firstElement.buttonFrame,
+											})
+											createInstance("UICorner", { Name = "ActiveTabBarCorner", CornerRadius = UDim.new(1, 0), Parent = firstElement.activeBar })
+
+											firstElement.nameLabel = createInstance("TextLabel", {
 											Name = "TabName",
-											FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+											FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 											TextColor3 = line.Library.config.Colors.Muted,
 											Text = object.Name,
 											BackgroundColor3 = line.Library.config.Colors.White,
@@ -5778,13 +5610,15 @@ Parent = firstElement.buttonFrame,
 
 											line.Library.currentTabYay = firstElement
 											firstElement.isActive = true
-											firstElement.contentFadeFrame.Visible = true
+										tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.ElementHover, BackgroundTransparency = 0 }, stack[64])
+										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 4, 0.5, -8), BackgroundTransparency = 0 }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+																					firstElement.contentFadeFrame.Visible = true
 											firstElement.contentFadeFrame.GroupTransparency = 1
 											tweenInstance(firstElement.contentFadeFrame, { GroupTransparency = 0 }, 0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 											local elapsedTime = table.find(line.tabsInSection, firstElement) or 1
 											local currentPosition = line.tabIndicatorFrame.Position
 											local index53 = tonumber(stack[48]) or (28 + (tonumber(stack[174]) or 5))
-											local targetSize = UDim2.new(0, stack[192], stack[33], 39 + (elapsedTime - 1) * index53)
+											local targetSize = UDim2.new(0, 7, stack[33], 10 + (elapsedTime - 1) * index53)
 											tweenInstance(line.tabIndicatorFrame, { Position = targetSize }, stack[64], Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
 											for _, bubble in ipairs(line.tabIndicatorTrails) do
@@ -5795,7 +5629,7 @@ Parent = firstElement.buttonFrame,
 												tweenInstance(bubble.frame, { Position = pos, BackgroundTransparency = 1 }, (tonumber(stack[64]) or 0.4) + (tonumber(bubble.delay) or 0), Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 											end
 
-											tweenInstance(firstElement.iconImg, { TextColor3 = line.Library.config.Colors.Text }, stack[64])
+												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.Text }, stack[64])
 											tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.Text }, stack[64])
 											line.Library.tabNameLabel.Text = object.Name
 											line.Library.tabDescriptionLabel.Text = object.Description
@@ -5803,9 +5637,12 @@ Parent = firstElement.buttonFrame,
 
 										firstElement.Deactivate = function()
 											firstElement.isActive = false
+												tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Element, BackgroundTransparency = 1 }, 0.35)
+										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 0, 0.5, -8), BackgroundTransparency = 1 }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+												tweenInstance(firstElement.buttonStroke, { Color = line.Library.config.Colors.BorderSoft, Transparency = 1 }, 0.35)
 											firstElement.contentFadeFrame.Visible = false
 											firstElement.contentFadeFrame.GroupTransparency = 1
-											tweenInstance(firstElement.iconImg, { TextColor3 = line.Library.config.Colors.Muted }, 0.35)
+												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.Muted }, 0.35)
 											tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.Muted }, stack[64])
 										end
 
@@ -5821,14 +5658,14 @@ Parent = firstElement.buttonFrame,
 										button.MouseEnter:Connect(function()
 											if not firstElement.isActive then
 												tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.TextHover }, stack[100])
-												tweenInstance(firstElement.iconImg, { TextColor3 = line.Library.config.Colors.TextHover }, stack[100])
+												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.TextHover }, stack[100])
 											end
 										end)
 
 										button.MouseLeave:Connect(function()
 											if not firstElement.isActive then
 												tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.Muted }, 0.3)
-												tweenInstance(firstElement.iconImg, { TextColor3 = line.Library.config.Colors.Muted }, 0.3)
+												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.Muted }, 0.3)
 											end
 										end)
 
@@ -5857,7 +5694,7 @@ Parent = firstElement.buttonFrame,
 												Name = "SectionContainerYay",
 												Active = stack[200],
 												BackgroundTransparency = 1,
-																	Size = UDim2.new(0, stack[45] + 2, 0, 32),
+																	Size = UDim2.new(0, 190, 0, 4),
 												ClipsDescendants = true,
 												Parent = line.sectionHolderScroll,
 											}),
@@ -5865,6 +5702,7 @@ Parent = firstElement.buttonFrame,
 
 										players.mainFrame = createInstance("Frame", {
 											Name = "SectionMainFrame",
+											Visible = false,
 											Active = true,
 											BackgroundColor3 = line.config.Colors.Secondary,
 											Position = UDim2.new(0, 1, 0, 2),
@@ -5914,7 +5752,7 @@ Parent = firstElement.buttonFrame,
 
 										createInstance("TextLabel", {
 											Name = "SectionName",
-											FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+											FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
 											TextColor3 = line.config.Colors.Text,
 											Text = sourceTable.Name,
 											BackgroundColor3 = line.config.Colors.White,
@@ -5942,18 +5780,19 @@ Parent = firstElement.buttonFrame,
 
 										players.tabIndicatorFrame = createInstance("Frame", {
 											Name = stack[47],
-											BackgroundColor3 = line.config.AccentColor,
-											BackgroundTransparency = 0,
+											BackgroundColor3 = line.config.Colors.Text,
+											BackgroundTransparency = 1,
+													Visible = false,
 											BorderSizePixel = 0,
-											Position = UDim2.new(0, 11, 0, stack[42]),
-											Size = UDim2.new(0, 136, 0, stack[185]),
+											Position = UDim2.new(0, 7, 0, 10),
+											Size = UDim2.new(0, 2, 0, 16),
 											Parent = players.containerFrame,
 										})
 
-										createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(stack[33], stack[72]), Parent = players.tabIndicatorFrame })
+										createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(1, 0), Parent = players.tabIndicatorFrame })
 										players.tabIndicatorTrails = {}
 
-										for k = 1, 4 do
+										for k = 1, 0 do
 											local elapsedTime = 28 + k * 3
 											local difference = (elapsedTime - 28) / 2
 
@@ -5962,7 +5801,7 @@ Parent = firstElement.buttonFrame,
 												BackgroundColor3 = line.config.AccentColor,
 												BackgroundTransparency = 1,
 												BorderSizePixel = stack[33],
-												Position = UDim2.new(stack[33], stack[192], 0, stack[42] - difference),
+												Position = UDim2.new(stack[33], stack[192], 0, 5 - difference),
 												Size = UDim2.new(stack[33], 136, 0, elapsedTime),
 												Parent = players.containerFrame,
 											})
@@ -5974,7 +5813,7 @@ Parent = firstElement.buttonFrame,
 										players.tabHolderFrame = createInstance("Frame", {
 											Name = "TabHolderFrame",
 											BackgroundTransparency = 1,
-											Position = UDim2.new(stack[33], 11, 0, 39),
+											Position = UDim2.new(stack[33], 11, 0, 2),
 											Size = UDim2.new(stack[33], 146, 0, 0),
 											ClipsDescendants = stack[200],
 											Parent = players.containerFrame,
@@ -6011,20 +5850,23 @@ Parent = firstElement.buttonFrame,
 											players.tabHolderFrame.Size = UDim2.new(stack[33], stack[3], 0, elapsedTime)
 
 											if players.isExpanded then
-												tweenInstance(players.containerFrame, { Size = UDim2.new(0, stack[45], 0, 32 + elapsedTime + 14) }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+												tweenInstance(players.containerFrame, { Size = UDim2.new(0, stack[45], 0, elapsedTime + 18) }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 											end
 										end
 
 										players.tabLayoutThing:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(mainLoop)
 
+										local sectionIcon = players.mainFrame:FindFirstChild("SectionIcon")
 										local function characterAdded()
 											players.isExpanded = not players.isExpanded
+											manager.Visible = players.isExpanded
+											if sectionIcon then sectionIcon.Visible = players.isExpanded end
 											tweenInstance(manager, { Rotation = players.isExpanded and stack[33] or -stack[91] }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 
 											if players.isExpanded then
 												local screenHeight = getTabsHeight()
 												players.tabHolderScale.Scale = 0.92
-												tweenInstance(players.containerFrame, { Size = UDim2.new(0, 158, 0, 32 + screenHeight + 14) }, 0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+												tweenInstance(players.containerFrame, { Size = UDim2.new(0, 158, 0, screenHeight + 18) }, 0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 												tweenInstance(players.tabHolderScale, { Scale = 1 }, 0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 												tweenInstance(players.tabIndicatorFrame, { BackgroundTransparency = 0 }, 0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
@@ -6048,7 +5890,7 @@ Parent = firstElement.buttonFrame,
 											Name = stack[179],
 											Text = "",
 											BackgroundTransparency = stack[18],
-											Size = UDim2.new(1, 0, stack[18], 0),
+											Size = UDim2.new(1, 0, 1, 0),
 											Parent = players.mainFrame,
 										}).MouseButton1Click:Connect(characterAdded)
 
@@ -6145,9 +5987,6 @@ Parent = firstElement.buttonFrame,
 										callWithRestoredThreadIdentity(tbl25.AFK.Toggle, stack[101])
 									end
 
-									if tbl25.Script then
-										callWithRestoredThreadIdentity(tbl25.Script.Toggle, false)
-									end
 
 									if tbl25.Render then
 										callWithRestoredThreadIdentity(tbl25.Render.DisableFX, false)
@@ -6156,6 +5995,10 @@ Parent = firstElement.buttonFrame,
 
 									if tbl25.Visuals then
 										callWithRestoredThreadIdentity(tbl25.Visuals.ClearESP)
+									end
+
+									if tbl25.Target and tbl25.Target.ClearHighlight then
+										callWithRestoredThreadIdentity(tbl25.Target.ClearHighlight)
 									end
 
 									if tbl25.Streak then
@@ -6207,6 +6050,16 @@ end
 									if globalEnvironment and globalEnvironment.LarpDeviceSpoofRun and globalEnvironment.LarpDeviceSpoofRun.Restore then
 										pcall(globalEnvironment.LarpDeviceSpoofRun.Restore)
 										globalEnvironment.LarpDeviceSpoofRun = nil
+									end
+
+									if larpBBState.MoneySpooferRestore then
+									    pcall(larpBBState.MoneySpooferRestore)
+									    larpBBState.MoneySpooferRestore = nil
+									end
+
+									if larpBBState.WorldCustomizerRestore then
+									    pcall(larpBBState.WorldCustomizerRestore)
+									    larpBBState.WorldCustomizerRestore = nil
 									end
 
 									cleanupResources(larpBBState)
@@ -6385,7 +6238,7 @@ end
 																																																																																																															local yString = deepCopy(existingPlayer)
 
 																																																																																																															if WeaponBase == "ParryAccuracy" then
-																																																																																																																yString = math.clamp(tonumber(yString) or 80, 1, 100)
+																																																																																																																yString = math.clamp(tonumber(yString) or 80, 0, 100)
 																																																																																																															elseif WeaponBase == "ParryRange" then
 																																																																																																															yString = math.clamp(tonumber(yString) or 0, 0, 10)
 																																																																																																															elseif WeaponBase == "MenuScale" then
@@ -6402,7 +6255,7 @@ end
 																																																																																																															local yString = descendant
 
 																																																																																																															if WeaponBase == "ParryAccuracy" then
-																																																																																																																yString = math.clamp(tonumber(yString) or 80, 1, 100)
+																																																																																																																yString = math.clamp(tonumber(yString) or 80, 0, 100)
 																																																																																																															elseif WeaponBase == "ParryRange" then
 																																																																																																																yString = math.clamp(tonumber(yString) or 0, 0, 10)
 																																																																																																															elseif WeaponBase == "MenuScale" then
@@ -6974,7 +6827,7 @@ end
 									end
 
 									coroutineBody({
-										ParryAccuracy = 80,
+										ParryAccuracy = 0,
 														ParryRange = 0,
 										AntiCurveEnabled = true,
 										BackwardsAntiCurveEnabled = true,
@@ -7600,7 +7453,7 @@ end return normal ;end
 												if userId then
 													local track
 
-													if index24 == "Remote" and tbl25.Parry and tbl25.Parry.Fire then
+													if (index24 == "Remote" or (tbl25.Target and tbl25.Target.IsActive and tbl25.Target.IsActive())) and tbl25.Parry and tbl25.Parry.Fire then
 														larpBBState.ParryMethod = "Remote"
 														track = tbl25.Parry.Fire()
 													else
@@ -7708,6 +7561,11 @@ end return normal ;end
 											return false
 										end
 										line = line or tbl20.AutoParryType
+
+										-- [TARGET PLAYER] com alvo valido o parry sempre sai pelo Remote (qualquer tipo)
+										if line ~= "Remote" and tbl25.Target and tbl25.Target.IsActive and tbl25.Target.IsActive() then
+											line = "Remote"
+										end
 
 										if line == "Remote" then
 											if tbl25.Parry and tbl25.Parry.Fire then
@@ -7969,7 +7827,7 @@ end return normal ;end
 										local active
 
 										if cell then
-											active = not (tbl20.AutoPlayEnabled and tbl20.HitFreeze)
+											active = cell
 										else
 											active = cell
 										end
@@ -8827,7 +8685,7 @@ Listener.Observe = ObserveDevice
 											end
 											local radians
 
-											if (userInputService.TouchEnabled or tbl20.AutoParryType == "Remote") and tbl25.Parry and tbl25.Parry.Fire then
+											if (userInputService.TouchEnabled or tbl20.AutoParryType == "Remote" or (tbl25.Target and tbl25.Target.IsActive and tbl25.Target.IsActive())) and tbl25.Parry and tbl25.Parry.Fire then
 												larpBBState.ParryMethod = "Remote"
 												local angleRadians
 												radians, angleRadians = tbl25.Parry.Fire(nil, stack[200])
@@ -9355,8 +9213,8 @@ Listener.Observe = ObserveDevice
 									tbl25.BallStats = {}
 
 									tbl25.BallStats.CreatePanel = function(line, value4, object)
-										local jsonString = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-										local result17 = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+										local jsonString = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+										local result17 = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 										local userInterface = Instance.new("ScreenGui")
 										userInterface.Name = "tungtungtungsahur" .. object
 										userInterface.ResetOnSpawn = stack[101]
@@ -9372,7 +9230,7 @@ Listener.Observe = ObserveDevice
 										RemoteEvent.Parent = userInterface
 										local panel = Instance.new("UIScale")
 										panel.Name = "StatsScale"
-										panel.Scale = stack[198]
+										panel.Scale = stack[198] * 0.9
 										panel.Parent = RemoteEvent
 										local mainFrame = Instance.new("Frame")
 										mainFrame.Name = "brobinipizanini"
@@ -9416,15 +9274,6 @@ Listener.Observe = ObserveDevice
 										container.Color = controller(lines)
 										container.Rotation = 260
 										container.Parent = stepPart
-										local image = Instance.new("ImageLabel")
-										image.Name = "igivup"
-										image.BackgroundTransparency = 1
-										image.BorderSizePixel = 0
-										image.Image = "rbxassetid://10723427199"
-										image.Position = UDim2.new(0, 10, 0, 10)
-										image.Size = UDim2.new(stack[33], stack[30], stack[33], 16)
-										image.Parent = mainFrame
-										Instance.new("UIAspectRatioConstraint", image)
 										local nameLabel = Instance.new("TextLabel")
 										nameLabel.Name = "v0rtexdisgay"
 										nameLabel.FontFace = jsonString
@@ -9434,7 +9283,7 @@ Listener.Observe = ObserveDevice
 										nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 										nameLabel.BackgroundTransparency = stack[18]
 										nameLabel.BorderSizePixel = stack[33]
-										nameLabel.Position = UDim2.new(stack[33], 32, stack[33], 8)
+										nameLabel.Position = UDim2.new(stack[33], 12, stack[33], 8)
 										nameLabel.Size = UDim2.new(1, -stack[79], 0, 16)
 										nameLabel.Parent = mainFrame
 										local imageLabel = Instance.new("Frame")
@@ -9471,7 +9320,7 @@ Listener.Observe = ObserveDevice
 										local closeButton = Instance.new("TextLabel")
 										closeButton.Name = "velocpeaktext"
 										closeButton.FontFace = jsonString
-										closeButton.Text = "peak velocity"
+										closeButton.Text = "peak"
 										closeButton.TextColor3 = colors.SubText
 										closeButton.TextSize = stack[46]
 										closeButton.TextXAlignment = Enum.TextXAlignment.Left
@@ -9484,7 +9333,7 @@ Listener.Observe = ObserveDevice
 										submitButton.Name = "peakvaluetext"
 										submitButton.FontFace = result17
 										submitButton.Text = "0.0"
-										submitButton.TextColor3 = colors.AccentLight
+										submitButton.TextColor3 = colors.Text
 										submitButton.TextSize = stack[46]
 										submitButton.TextXAlignment = Enum.TextXAlignment.Right
 										submitButton.BackgroundTransparency = 1
@@ -9973,13 +9822,11 @@ Listener.Observe = ObserveDevice
 										AutoSpamType = "Remote",
 										AutoSpamEnabled = false,
 										AutoSpamAnimFix = true,
-										AutoSpamAnimFixType = "Animation",
-										AutoSpamThreshold = 2,
-										DynamicSpamThreshold = false,
+										AutoSpamThreshold = 1.4,
+										AutoSpamSensitivity = 1.19,
 										ManualSpamEnabled = false,
 										ManualSpamType = "Remote",
 										ManualSpamAnimFix = true,
-										ManualSpamAnimFixType = "Animation",
 									})
 
 									tbl25.Loop = {}
@@ -10256,7 +10103,7 @@ Listener.Observe = ObserveDevice
 															local rayOrigin = redoFunction(dotProduct, result74, osClock) or result74 and result74.Position or Vector3.zero
 															local leftChild = currentPosition - rayOrigin
 															local totalTime = leftChild.Magnitude
-															local endPosition = 101 - math.clamp(tonumber(tbl20.ParryAccuracy) or 80, 1, 100)
+															local endPosition = 101 - math.clamp(tonumber(tbl20.ParryAccuracy) or 80, 0, 100)
 															local ENT = larpBBState.PhantomData
 															local innerPlayer = larpBBState.PhantomTarget
 															innerPlayer = innerPlayer and innerPlayer:FindFirstChild("HumanoidRootPart")
@@ -10273,9 +10120,13 @@ Listener.Observe = ObserveDevice
 																continue
 															end
 
+															-- Limita a janela em um meio-termo: evita antecipacao exagerada em baixa velocidade.
+															endPosition = math.clamp(endPosition, 21, 61)
 															local isRoblox = not result73
 
-															if not (isRoblox and (tbl20.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))) then
+															-- Fallback preditivo apenas para bolas rapidas em aproximacao: estima o tempo ate contato usando velocidade projetada.
+										local fastApproach = graph and not result73 and exponent >= 100 and onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection) <= math.clamp(difference + 1 / 60, 0.025, 0.08)
+										if not (isRoblox and (tbl20.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))) then
 																if not (result73 and not bestPair) then
 																	local maximumValue = math.clamp((endPosition - 1) / 99, 0, 1)
 																	local offsetZ = maximumValue * maximumValue * (stack[61] - 2 * maximumValue)
@@ -10354,7 +10205,7 @@ Listener.Observe = ObserveDevice
 																		end
 																	end
 
-																	if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and totalTime <= index36 and not ikConstraint.Parried and (not top or currentDate ~= word) then
+																	if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and (totalTime <= index36 or fastApproach) and not ikConstraint.Parried and (not top or currentDate ~= word) then
 																		local empty = isRoblox or bestPair or not result73 and result72 == targetPlayerName
 
 																		if not empty and bestChild then
@@ -10608,11 +10459,7 @@ Listener.Observe = ObserveDevice
 									isPinned = cell <= newDenominator and exponent <= offsetZ
 
 									if isPinned and not active and not bestPair then
-										if tbl20.DynamicSpamThreshold then
-											maximumValue = math.clamp(math.ceil(math.min(math.max(cell / newDenominator, exponent / offsetZ), stack[70] * math.max(cell, exponent) / totalTime * endPosition) * 3), 1, 3)
-										else
-											maximumValue = math.clamp(math.round(tbl20.AutoSpamThreshold or 2), 1, 4)
-										end
+										maximumValue = math.clamp(math.round((tbl20.AutoSpamThreshold or 1.4) * (tbl20.AutoSpamSensitivity or 1.19)), 1, 4)
 									end
 								end
 
@@ -10656,7 +10503,7 @@ Listener.Observe = ObserveDevice
 										end
 
 										if byte and not result68 and tbl20.AutoSpamAnimFix then
-											tbl25.Animation.PlayAnimation(nil, tbl20.AutoSpamAnimFixType)
+											tbl25.Animation.PlayAnimation(nil, "Animation + Click")
 										end
 									end
 								else
@@ -10737,7 +10584,7 @@ Listener.Observe = ObserveDevice
 							tbl25.ManualSpam = { Data = { {}, { 0, 0 } }, Carry = 0 }
 
 							tbl25.MobileControls.Create = function(line, object, descendant, radius)
-								local jsonString = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+								local jsonString = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 								local radians = tbl25.MobileControls.GetX(descendant)
 
 								local identifier = v98("ScreenGui", {
@@ -11054,7 +10901,7 @@ Listener.Observe = ObserveDevice
 										if tbl25.Parry and tbl25.Parry.Fire then
 											local radians, angleRadians = tbl25.Parry.Fire(nil, true, line, descendant)
 
-											if radians and not angleRadians and object ~= stack[101] and tbl20.ManualSpamAnimFix and tbl20.ManualSpamAnimFixType == "Click" then
+											if radians and not angleRadians and object ~= stack[101] and tbl20.ManualSpamAnimFix and "Animation + Click" == "Click" then
 												tbl25.Animation.PlayAnimation(nil, "Click")
 											end
 
@@ -11112,13 +10959,13 @@ Listener.Observe = ObserveDevice
 
 									local osClock = os.clock()
 									local isRemote = tbl20.ManualSpamType == "Remote"
-									local animFixOn = isRemote and tbl20.ManualSpamAnimFix and tbl20.ManualSpamAnimFixType ~= "Click"
+									local animFixOn = isRemote and tbl20.ManualSpamAnimFix and "Animation + Click" ~= "Click"
 
 									-- Anim Fix: tentado todo frame; a maquina de estados do PlayAnimation limita a 1 a cada 0.3s
 									if animFixOn then
 										local fix = tbl25.Animation.Fix
 										if fix.Force or not (fix.Recent or fix.Busy) then
-											tbl25.Animation.PlayAnimation(nil, tbl20.ManualSpamAnimFixType)
+											tbl25.Animation.PlayAnimation(nil, "Animation + Click")
 										end
 									end
 
@@ -11188,8 +11035,8 @@ Listener.Observe = ObserveDevice
 									end
 									local radians, angleRadians = tbl25.Loop.ManualSpamLoop()
 
-									if radians and not angleRadians and tbl20.ManualSpamType == "Remote" and tbl20.ManualSpamAnimFix and tbl20.ManualSpamAnimFixType ~= "Click" then
-										tbl25.Animation.PlayAnimation(nil, tbl20.ManualSpamAnimFixType)
+									if radians and not angleRadians and tbl20.ManualSpamType == "Remote" and tbl20.ManualSpamAnimFix and "Animation + Click" ~= "Click" then
+										tbl25.Animation.PlayAnimation(nil, "Animation + Click")
 									end
 								end
 							end
@@ -11218,8 +11065,8 @@ Listener.Observe = ObserveDevice
 
 							do
 								local function onInputEnded()
-									local jsonString = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-									local result17 = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+									local jsonString = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+									local result17 = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 
 									local identifier = v98("ScreenGui", {
 										Name = "LarpKeybindList",
@@ -11233,8 +11080,8 @@ Listener.Observe = ObserveDevice
 									local instance = v98("CanvasGroup", {
 										Name = "Main",
 										BackgroundTransparency = stack[18],
-										Position = UDim2.new(0, 32, stack[81], -120),
-										Size = UDim2.new(0, 260, stack[33], 48),
+										Position = UDim2.new(0, 36, 0, 48),
+										Size = UDim2.new(0, 252, stack[33], 48),
 										GroupTransparency = 1,
 										Parent = identifier,
 									})
@@ -11253,26 +11100,26 @@ Listener.Observe = ObserveDevice
 									v98(stack[137], { CornerRadius = UDim.new(stack[33], stack[192]), Parent = data })
 									v98("UIStroke", { Color = colors.BorderSoft, Parent = data })
 
-									v98("ImageLabel", {
-										Name = "Icon",
-										BackgroundTransparency = 1,
-										Image = "rbxassetid://10723416765",
-										ImageColor3 = colors.SubText,
-										Position = UDim2.new(stack[33], 10, 0, 10),
-										Size = UDim2.new(stack[33], 16, stack[33], 16),
-										Parent = data,
-									})
+						v98("ImageLabel", {
+							Name = "Icon",
+							BackgroundTransparency = 1,
+							Image = "rbxassetid://10723416765",
+							ImageColor3 = colors.SubText,
+							Position = UDim2.new(stack[33], 10, 0, 10),
+							Size = UDim2.new(stack[33], 16, stack[33], 16),
+							Parent = data,
+						})
 
 									v98(stack[65], {
 										Name = "Title",
 										FontFace = result17,
-										Text = "keybind list",
+										Text = "Keybinds",
 										TextColor3 = colors.Text,
 										TextSize = 15,
-										TextXAlignment = Enum.TextXAlignment.Left,
+										TextXAlignment = Enum.TextXAlignment.Center,
 										BackgroundTransparency = 1,
-										Position = UDim2.new(0, 32, 0, 8),
-										Size = UDim2.new(1, -stack[79], 0, 18),
+										Position = UDim2.new(0, 0, 0, 8),
+										Size = UDim2.new(1, 0, 0, 18),
 										Parent = data,
 									})
 
@@ -11307,120 +11154,87 @@ Listener.Observe = ObserveDevice
 									return { Gui = identifier, Group = instance, Scale = name, Holder = radians, Rows = {}, Font = jsonString }
 								end
 
-								tbl25.UIExtra.RefreshKeybindList = function()
-									local title = larpBBState.KeybindPanel
-									if not title then
-										return
-									end
-									local radians = v102.GetAll()
-									local lines = {}
+										tbl25.UIExtra.RefreshKeybindList = function()
+										    local title = larpBBState.KeybindPanel
+										    if not title then
+										        return
+										    end
 
-									for vertex, existingPlayer in radians, nil, nil do
-										local sourceTable = title.Rows[existingPlayer.Id]
-										local difference = (vertex - stack[18]) * 22
+										    local bindings = v102.GetAll()
+										    local remaining = {}
+										    local rowHeight = 24
 
-										if not sourceTable then
-											local container = Instance.new(stack[170])
-											container.Name = existingPlayer.Id
-											container.BackgroundColor3 = colors.Secondary
-											container.BackgroundTransparency = 1
-											container.BorderSizePixel = 0
-											container.Position = UDim2.new(0, 0, stack[33], difference + 8)
-											container.Size = UDim2.new(stack[18], 0, 0, 18)
-											container.Parent = title.Holder
-											local mainFrame = Instance.new("Frame")
-											mainFrame.Name = "Check_Box"
-											mainFrame.BackgroundColor3 = colors.Element
-											mainFrame.BackgroundTransparency = 1
-											mainFrame.BorderSizePixel = 0
-											mainFrame.Position = UDim2.new(0, 0, stack[81], -stack[72])
-											mainFrame.Size = UDim2.new(0, stack[46], 0, stack[46])
-											mainFrame.Parent = container
-											local panel = Instance.new("UIScale")
-											panel.Scale = 0.6
-											panel.Parent = mainFrame
-											local image = Instance.new("ImageLabel")
-											image.Name = "Check"
-											image.BackgroundTransparency = 1
-											image.Image = "rbxassetid://114461119629011"
-											image.ImageColor3 = colors.AccentLight
-											image.ImageTransparency = 1
-											image.Position = UDim2.new(stack[81], -stack[72], 0.5, -7)
-											image.Size = UDim2.new(0, 14, 0, 14)
-											image.Parent = mainFrame
-											local messageLabel = Instance.new(stack[65])
-											messageLabel.Name = "Name"
-											messageLabel.FontFace = title.Font
-											messageLabel.TextColor3 = colors.SubText
-											messageLabel.TextSize = 13
-											messageLabel.TextXAlignment = Enum.TextXAlignment.Left
-											messageLabel.BackgroundTransparency = 1
-											messageLabel.Position = UDim2.new(0, 22, stack[33], 0)
-											messageLabel.Size = UDim2.new(1, -126, 1, 0)
-											messageLabel.TextTransparency = 1
-											messageLabel.Parent = container
-											local nameLabel = Instance.new("TextLabel")
-											nameLabel.Name = "Key"
-											nameLabel.FontFace = title.Font
-											nameLabel.TextColor3 = colors.AccentLight
-											nameLabel.TextSize = 13
-											nameLabel.TextXAlignment = Enum.TextXAlignment.Right
-											nameLabel.BackgroundTransparency = stack[18]
-											nameLabel.Position = UDim2.new(1, -102, 0, 0)
-											nameLabel.Size = UDim2.new(0, 102, stack[18], 0)
-											nameLabel.TextTransparency = 1
-											nameLabel.Parent = container
-											sourceTable = { Frame = container, Name = messageLabel, Key = nameLabel, Check = image, CheckScale = panel }
-											title.Rows[existingPlayer.Id] = sourceTable
-											v101(container, { Position = UDim2.new(stack[33], 0, stack[33], difference), BackgroundTransparency = 0.45 }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-											v101(messageLabel, { TextTransparency = 0 }, stack[100])
-											v101(nameLabel, { TextTransparency = stack[33] }, 0.3)
-										else
-											v101(sourceTable.Frame, { Position = UDim2.new(0, 0, 0, difference) }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+										    for index, binding in bindings, nil, nil do
+										        local row = title.Rows[binding.Id]
+										        local yOffset = (index - 1) * rowHeight
+
+										        if not row then
+										            local container = Instance.new("Frame")
+										            container.Name = binding.Id
+										            container.BackgroundColor3 = colors.Secondary
+										            container.BackgroundTransparency = 1
+										            container.BorderSizePixel = 0
+										            container.Position = UDim2.new(0, 0, 0, yOffset + 5)
+										            container.Size = UDim2.new(1, 0, 0, rowHeight)
+										            container.Parent = title.Holder
+
+										            local nameLabel = Instance.new("TextLabel")
+										            nameLabel.Name = "Name"
+										            nameLabel.FontFace = title.Font
+										            nameLabel.TextColor3 = colors.Text
+										            nameLabel.TextSize = 14
+										            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+										            nameLabel.BackgroundTransparency = 1
+										            nameLabel.Position = UDim2.new(0, 2, 0, 0)
+										            nameLabel.Size = UDim2.new(1, -100, 1, 0)
+										            nameLabel.TextTransparency = 1
+										            nameLabel.Parent = container
+
+										            local keyLabel = Instance.new("TextLabel")
+										            keyLabel.Name = "Key"
+										            keyLabel.FontFace = title.Font
+										            keyLabel.TextColor3 = colors.Text
+										            keyLabel.TextSize = 13
+										            keyLabel.TextXAlignment = Enum.TextXAlignment.Right
+										            keyLabel.BackgroundTransparency = 1
+										            keyLabel.Position = UDim2.new(1, -96, 0, 0)
+										            keyLabel.Size = UDim2.new(0, 96, 1, 0)
+										            keyLabel.TextTransparency = 1
+										            keyLabel.Parent = container
+
+										            row = { Frame = container, Name = nameLabel, Key = keyLabel }
+										            title.Rows[binding.Id] = row
+										            v101(container, { Position = UDim2.new(0, 0, 0, yOffset), BackgroundTransparency = 0.6 }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+										            v101(nameLabel, { TextTransparency = 0 }, stack[100])
+										            v101(keyLabel, { TextTransparency = 0 }, 0.3)
+										        else
+										            v101(row.Frame, { Position = UDim2.new(0, 0, 0, yOffset) }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+										        end
+
+										        row.Name.Text = tostring(binding.Name or "Action")
+										        row.Key.Text = "[ " .. tostring(binding.Key or "None") .. " ]"
+										        remaining[binding.Id] = true
+										    end
+
+										    for id, row in title.Rows, nil, nil do
+										        if not remaining[id] then
+										            title.Rows[id] = nil
+										            v101(row.Frame, { BackgroundTransparency = 1, Position = row.Frame.Position + UDim2.new(0, 0, 0, 5) }, 0.25)
+										            v101(row.Name, { TextTransparency = 1 }, 0.2)
+										            v101(row.Key, { TextTransparency = 1 }, 0.2)
+										            task.delay(0.26, function()
+										                if row.Frame then
+										                    row.Frame:Destroy()
+										                end
+										            end)
+										        end
+										    end
+
+										    local rowCount = math.max(#bindings, 1)
+										    v101(title.Group, { Size = UDim2.new(0, 252, 0, 48 + rowCount * rowHeight) }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+										    title.Holder.Size = UDim2.new(1, -20, 0, rowCount * rowHeight)
 										end
-
-										sourceTable.Name.Text = string.lower(existingPlayer.Name)
-										sourceTable.Key.Text = existingPlayer.Key .. " [" .. string.lower(existingPlayer.Mode) .. "]"
-										local cell = existingPlayer.Active == stack[200]
-										v101(sourceTable.CheckScale, { Scale = cell and stack[18] or 0.6 }, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-										v101(sourceTable.Check, { ImageTransparency = cell and 0 or stack[18], Rotation = cell and 0 or -45 }, 0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-
-										v101(sourceTable.Name, {
-											Position = UDim2.new(0, cell and stack[197] or 0, 0, 0),
-											Size = UDim2.new(1, cell and -126 or -104, 1, 0),
-										}, 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-
-										lines[existingPlayer.Id] = stack[200]
-									end
-
-									for vertex, existingPlayer in title.Rows, nil, nil do
-										if not lines[vertex] then
-											title.Rows[vertex] = nil
-
-											v101(existingPlayer.Frame, {
-												BackgroundTransparency = stack[18],
-												Position = existingPlayer.Frame.Position + UDim2.new(0, 0, 0, 8),
-											}, 0.25)
-
-											v101(existingPlayer.Name, { TextTransparency = 1 }, stack[113])
-											v101(existingPlayer.Key, { TextTransparency = 1 }, 0.2)
-											v101(existingPlayer.Check, { ImageTransparency = 1, Rotation = -45 }, 0.2)
-											v101(existingPlayer.CheckScale, { Scale = 0.6 }, 0.2)
-
-											task.delay(0.26, function()
-												if existingPlayer.Frame then
-													existingPlayer.Frame:Destroy()
-												end
-											end)
-										end
-									end
-
-									local angleRadians = stack[197]
-									v101(title.Group, { Size = UDim2.new(stack[33], 260, 0, 48 + math.max(#radians, 1) * angleRadians) }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-									title.Holder.Size = UDim2.new(stack[18], -stack[108], 0, math.max(#radians, 1) * 22)
-								end
-
-								tbl25.UIExtra.ToggleKeybindList = function(pointB)
+tbl25.UIExtra.ToggleKeybindList = function(pointB)
 									tbl20.KeybindListEnabled = pointB
 									if not pointB then
 										tbl25.UIExtra.HideKeybindList(true)
@@ -11462,6 +11276,9 @@ Listener.Observe = ObserveDevice
 							end
 
 							tbl25.UIExtra.HideOverlays = function()
+										if larpBBState.CustomOverlayCleanup then
+											larpBBState.CustomOverlayCleanup()
+										end
 								larpBBState.RefreshKeybinds = nil
 								coroutineFunction("Ball Stats")
 
@@ -15617,73 +15434,41 @@ Listener.Observe = ObserveDevice
 
 						coroutineBody({
 							AutoPlayEnabled = false,
-							AutoVoteMap = stack[101],
-							HitFreeze = false,
 							SpamJump = false,
 							AutoPlaySmoothness = stack[169],
 							AutoPlayAggressiveness = 45,
 							AntiAFK = stack[101],
-							AutoRejoinExecute = stack[101],
-							ScriptKey = "",
-							AutoPlayMode = "Play Edge",
+							AutoPlayMode = "Edge",
 						})
 
 						tbl25.AFK = {}
 
-						tbl25.AFK.Toggle = function(line)
-							larpBBState.AFKConnections = larpBBState.AFKConnections or {}
-
-							for _, particle in larpBBState.AFKConnections, nil, nil do
-								if not particle.Enabled then
-									particle:Enable()
-								end
+						tbl25.AFK.Toggle = function(enabled)
+							local connection = larpBBState.AFKConnection
+							if connection then
+								connection:Disconnect()
+								larpBBState.AFKConnection = nil
 							end
-
-							table.clear(larpBBState.AFKConnections)
-							if not line then
+							if not enabled then
 								return
 							end
 
-							for _, particle in getconnections(localPlayer.Idled) do
-								if particle.Enabled then
-									particle:Disable()
-									table.insert(larpBBState.AFKConnections, particle)
-								end
-							end
-						end
-
-						tbl25.Script = {}
-
-						tbl25.Script.Queue = function()
-							local targetName = tostring(scriptKey or tbl20.ScriptKey or ""):match("^%s*(.-)%s*$")
-							if targetName == "" then
-								return stack[101]
-							end
-							queueonteleport(("script_key=%q;\nloadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/e30ade937c4c9b8ddbb03e976696e380.lua\"))()"):format(targetName))
-							return stack[200]
-						end
-
-						tbl25.Script.Toggle = function(line)
-							coroutineFunction("Auto Rejoin")
-							larpBBState.ScriptRejoining = nil
-							if not line then
+							local ok, virtualUser = pcall(function()
+								return game:GetService("VirtualUser")
+							end)
+							if not ok or not virtualUser then
 								return
 							end
 
-							larpBBState.Connections["Auto Rejoin"] = coreGui:WaitForChild("RobloxPromptGui"):WaitForChild("promptOverlay").ChildAdded:Connect(function(guiObject)
-								if guiObject.Name ~= "ErrorPrompt" or larpBBState.ScriptRejoining or guiService.MenuIsOpen then
-									return
-								end
-								local LocalPlayer = guiObject:WaitForChild("MessageArea", 1)
-								if not LocalPlayer or not LocalPlayer:WaitForChild("ErrorFrame", 1) or not tbl25.Script.Queue() then
-									return
-								end
-								larpBBState.ScriptRejoining = true
-								teleportService:Teleport(game.PlaceId, localPlayer)
+							larpBBState.AFKConnection = localPlayer.Idled:Connect(function()
+								pcall(function()
+									virtualUser:CaptureController()
+									virtualUser:ClickButton2(Vector2.new(0, 0))
+								end)
 							end)
 						end
 
-						tbl25.AutoPlay = { Direction = 1, Voting = {} }
+						tbl25.AutoPlay = { Direction = 1 }
 
 						tbl25.AutoPlay.Jump = function(line, object)
 							if not line then
@@ -15716,139 +15501,9 @@ Listener.Observe = ObserveDevice
 							end
 						end
 
-						tbl25.AutoPlay.VoteMode = function(line)
-							local RoundStateEnum = tbl25.AutoPlay.Voting
-							local bloomEffect = localPlayer.PlayerGui:FindFirstChild("voter")
-
-							if not bloomEffect or not bloomEffect.Enabled then
-								RoundStateEnum.Mode = nil
-								RoundStateEnum.ModeAt = nil
-								return
-							end
-
-							if RoundStateEnum.Mode ~= bloomEffect then
-								RoundStateEnum.Mode = bloomEffect
-								RoundStateEnum.ModeAt = line + 0.25 + math.random() * 0.5
-							end
-
-							if not RoundStateEnum.ModeAt or line < RoundStateEnum.ModeAt then
-								return
-							end
-							RoundStateEnum.ModeAt = nil
-							local toolInstance = bloomEffect:FindFirstChild(stack[170])
-							toolInstance = toolInstance and toolInstance:FindFirstChild("1")
-							local radians = toolInstance and toolInstance:FindFirstChildWhichIsA(stack[65], stack[200])
-
-							if toolInstance and radians and radians.Text == "Classic" then
-								firesignal(toolInstance.Activated)
-							end
-						end
-
-						tbl25.AutoPlay.VoteMap = function(line, object, descendant, radius)
-							local RoundStateEnum = tbl25.AutoPlay.Voting
-							local character3 = radius:FindFirstChild("GUI")
-							local character5 = character3 and character3:FindFirstChild("SurfaceGui")
-							local square = character5 and character5:FindFirstChild("Top")
-
-							if not (square and square.Visible) then
-								if RoundStateEnum.Map then
-									RoundStateEnum.Done = stack[200]
-								end
-
-								RoundStateEnum.Map = nil
-								RoundStateEnum.MapAt = nil
-								RoundStateEnum.Pad = nil
-								if RoundStateEnum.Done then
-									object:MoveTo(descendant.Position)
-									return
-								end
-
-								if not RoundStateEnum.Waiting then
-									RoundStateEnum.Waiting = true
-									RoundStateEnum.Moves = math.random(stack[18], 3)
-									RoundStateEnum.Move = stack[33]
-									RoundStateEnum.MoveAt = line + 0.4 + math.random()
-								end
-
-								if not RoundStateEnum.Target and RoundStateEnum.Move < RoundStateEnum.Moves and line >= RoundStateEnum.MoveAt then
-									local result33 = radius:FindFirstChild("Part")
-									result33 = result33 and result33.Position - descendant.Position or Vector3.zero
-									local relativePosition = Vector3.new(result33.X, 0, result33.Z)
-
-									if relativePosition.Magnitude > 0.1 then
-										local directionToTarget = relativePosition.Unit
-										local horizontalVelocity = Vector3.new(-directionToTarget.Z, 0, directionToTarget.X)
-										RoundStateEnum.Move = RoundStateEnum.Move + 1
-										local currentPosition = descendant.Position
-										local cell = RoundStateEnum.Move == 1
-
-										if cell then
-											local radians = stack[153]
-											cell = 3 + math.random() * radians
-										end
-
-										local difference = currentPosition + directionToTarget * (cell or math.random() * 1.5)
-										local radians = stack[81]
-										RoundStateEnum.Target = difference + horizontalVelocity * (math.random() - radians) * (RoundStateEnum.Move == stack[18] and 5 or 3)
-									end
-								end
-
-								if not RoundStateEnum.Target then
-									object:MoveTo(descendant.Position)
-									return
-								end
-
-								if (RoundStateEnum.Target - descendant.Position).Magnitude <= stack[122] then
-									RoundStateEnum.Target = nil
-									RoundStateEnum.MoveAt = line + stack[81] + math.random() * 1.5
-									object:MoveTo(descendant.Position)
-								else
-									object:MoveTo(RoundStateEnum.Target)
-								end
-
-								return
-							end
-
-							RoundStateEnum.Done = nil
-							RoundStateEnum.Waiting = nil
-							RoundStateEnum.Moves = nil
-							RoundStateEnum.Move = nil
-							RoundStateEnum.Target = nil
-
-							if RoundStateEnum.Map ~= square or not RoundStateEnum.Pad or not RoundStateEnum.Pad.Parent then
-								RoundStateEnum.Map = square
-								RoundStateEnum.MapAt = line + 0.8 + math.random() * 1.7
-								local gui = radius:FindFirstChild("Colliders")
-								local lines = {}
-								local queue = gui and gui:GetChildren() or {}
-
-								for _, particle in queue, nil, nil do
-									if particle:IsA("BasePart") then
-										lines[#lines + stack[18]] = particle
-									end
-								end
-
-								RoundStateEnum.Pad = #lines > 0 and lines[math.random(#lines)]
-							end
-
-							local cell = not RoundStateEnum.Pad
-
-							if not cell then
-								cell = line < (RoundStateEnum.MapAt or stack[33])
-							end
-
-							if cell then
-								object:MoveTo(descendant.Position)
-								return
-							end
-							local currentPosition = RoundStateEnum.Pad.Position
-							object:MoveTo(Vector3.new(currentPosition.X, descendant.Position.Y, currentPosition.Z))
-						end
-
 						tbl25.AutoPlay.Stop = function()
 							coroutineFunction("Auto Play")
 							tbl25.AutoPlay.Jump(false)
-							table.clear(tbl25.AutoPlay.Voting)
 							tbl25.AutoPlay.Floor = nil
 							tbl25.AutoPlay.Spawn = nil
 							tbl25.AutoPlay.Map = nil
@@ -15899,18 +15554,11 @@ Listener.Observe = ObserveDevice
 							end
 							tbl25.AutoPlay.UpdateAt = osClock + 0.066666666666666666
 
-							if tbl20.AutoVoteMap then
-								tbl25.AutoPlay.VoteMode(osClock)
-							end
 
 							if model.Parent == workspace:FindFirstChild("Dead") then
 								tbl25.AutoPlay.InMatch = false
 								local result49 = workspace:FindFirstChild("Spawn")
 								result49 = result49 and result49:FindFirstChild("NewPlayerCounter")
-								if tbl20.AutoVoteMap and result49 then
-									tbl25.AutoPlay.VoteMap(osClock, targetHumanoid, explosion, result49)
-									return
-								end
 
 								if not tbl25.AutoPlay.LobbyDecided then
 									tbl25.AutoPlay.LobbyDecided = true
@@ -15981,7 +15629,6 @@ Listener.Observe = ObserveDevice
 
 							if not tbl25.AutoPlay.InMatch then
 								tbl25.AutoPlay.InMatch = stack[200]
-								table.clear(tbl25.AutoPlay.Voting)
 								tbl25.AutoPlay.MatchHadOpponent = stack[101]
 								tbl25.AutoPlay.WonLast = false
 								tbl25.AutoPlay.LobbyDecided = false
@@ -16050,7 +15697,7 @@ Listener.Observe = ObserveDevice
 								tbl25.AutoPlay.Map = result24
 								tbl25.AutoPlay.Mode = tbl20.AutoPlayMode
 								tbl25.AutoPlay.Floor = result24 and result24:FindFirstChild("FLOOR", true)
-								tbl25.AutoPlay.Spawn = tbl20.AutoPlayMode ~= "Play Edge" and result24 and result24:FindFirstChild("BALLSPAWN", stack[200])
+								tbl25.AutoPlay.Spawn = tbl20.AutoPlayMode ~= "Edge" and result24 and result24:FindFirstChild("BALLSPAWN", stack[200])
 								tbl25.AutoPlay.Raycast = nil
 								tbl25.AutoPlay.Home = nil
 								tbl25.AutoPlay.Anchor = nil
@@ -16070,8 +15717,14 @@ Listener.Observe = ObserveDevice
 								return
 							end
 							local difference = previous() / 1000
+							local pingMs = math.max(0, difference * 1000)
+							local threat = angleRadians and math.clamp(1 - radians / 45, 0, 1) or 0
+							local contest = track == 2 and 1 or 0
+							local latencyPenalty = math.clamp((pingMs - 80) * 0.12, 0, 18)
+							tbl20.AutoPlayAggressiveness = math.clamp(55 + threat * 24 + contest * 8 - latencyPenalty, 35, 90)
+							tbl20.AutoPlaySmoothness = math.clamp(68 + math.clamp((pingMs - 80) * 0.15, 0, 18) - threat * 18 - contest * 6, 35, 90)
 							local result27 = tbl25.AutoPlay.Middle
-							local IsFiveM = tbl20.AutoPlayMode == "Play Middle"
+							local IsFiveM = tbl20.AutoPlayMode == "Middle"
 
 							if tbl20.AutoPlayMode == "Mix" then
 								local cell = tbl25.AutoPlay.Middle == nil
@@ -16202,12 +15855,6 @@ Listener.Observe = ObserveDevice
 									local exponent = index4(modelName).Magnitude
 									local targetPlayerName = localPlayer.Name
 									local isArray = compareFunction(modelName) == targetPlayerName
-									local isFiveM = tbl20.HitFreeze and isArray
-
-									if isFiveM then
-										local major = stack[200]
-										isFiveM = modelName:GetAttribute("Frozen") == major
-									end
 
 									if isArray and active then
 										local center = explosion.Position - unexecuteFunction(modelName)
@@ -16223,7 +15870,7 @@ Listener.Observe = ObserveDevice
 										end
 									else
 										if isArray then
-											isArray = (steering.TargetChanges or 0) <= 1 and exponent <= targetHumanoid.WalkSpeed or isFiveM
+											isArray = (steering.TargetChanges or 0) <= 1 and exponent <= targetHumanoid.WalkSpeed
 										end
 
 										if isArray then
@@ -16408,7 +16055,7 @@ Listener.Observe = ObserveDevice
 							end
 						end
 
-						coroutineBody({ AvatarEnabled = false, AvatarUser = "", KHEnabled = false })
+						coroutineBody({ AvatarEnabled = false, AvatarUser = "", KorbloxEnabled = false, HeadlessEnabled = false, KHEnabled = false })
 
 						tbl25.LoadRewards = function()
 							local instance5 = { Items = {} }
@@ -17357,9 +17004,10 @@ Listener.Observe = ObserveDevice
 
 									hitboxPart = hitboxPart and hitboxPart:FindFirstChild("Head")
 
-									if hitboxPart then
-										hitboxPart.Transparency = major.HeadTransparency
-									end
+										if hitboxPart then
+											hitboxPart.Transparency = major.HeadTransparency
+											hitboxPart.LocalTransparencyModifier = major.HeadLocalTransparencyModifier or 0
+										end
 
 									if major.Face and major.Face.Parent then
 										major.Face.Transparency = major.FaceTransparency
@@ -17381,34 +17029,41 @@ Listener.Observe = ObserveDevice
 								local beam = nearestPlayer and (nearestPlayer:FindFirstChild("face") or nearestPlayer:FindFirstChildOfClass("Decal"))
 
 								local lines = {
-									Character = hitboxPart,
-									HeadTransparency = nearestPlayer and nearestPlayer.Transparency or 0,
-									Face = beam,
+										Character = hitboxPart,
+										HeadTransparency = nearestPlayer and nearestPlayer.Transparency or 0,
+										HeadLocalTransparencyModifier = nearestPlayer and nearestPlayer.LocalTransparencyModifier or 0,
+										Face = beam,
 									FaceTransparency = beam and beam.Transparency or stack[33],
 									LegMeshes = {},
 								}
 
-								for _, weld in hitboxPart:GetChildren() do
-									if weld:IsA("CharacterMesh") and weld.BodyPart == Enum.BodyPart.RightLeg then
-										lines.LegMeshes[#lines.LegMeshes + 1] = weld
-										weld.Parent = player2
+								if tbl20.KorbloxEnabled then
+
+									for _, weld in hitboxPart:GetChildren() do
+										if weld:IsA("CharacterMesh") and weld.BodyPart == Enum.BodyPart.RightLeg then
+											lines.LegMeshes[#lines.LegMeshes + 1] = weld
+											weld.Parent = player2
+										end
 									end
 								end
 
-								local sorter = Instance.new("CharacterMesh")
-								sorter.Name = "LarpKorblox"
-								sorter.BodyPart = Enum.BodyPart.RightLeg
-								sorter.MeshId = 101851696
-								sorter.OverlayTextureId = 101851254
-								sorter.Parent = hitboxPart
-								lines.Korblox = sorter
+								if tbl20.KorbloxEnabled then
+									local sorter = Instance.new("CharacterMesh")
+									sorter.Name = "LarpKorblox"
+									sorter.BodyPart = Enum.BodyPart.RightLeg
+									sorter.MeshId = 101851696
+									sorter.OverlayTextureId = 101851254
+									sorter.Parent = hitboxPart
+									lines.Korblox = sorter
+								end
 								steering = lines
 
-								if nearestPlayer then
-									nearestPlayer.Transparency = 1
-								end
+									if tbl20.HeadlessEnabled and nearestPlayer then
+										nearestPlayer.Transparency = 1
+										nearestPlayer.LocalTransparencyModifier = 1
+									end
 
-								if beam then
+								if tbl20.HeadlessEnabled and beam then
 									beam.Transparency = 1
 								end
 							end
@@ -17464,14 +17119,14 @@ Listener.Observe = ObserveDevice
 								if not pcall(tbl23.CopyAppearance, line, object, targetHumanoid) then
 									tbl23.RestoreAppearance(object)
 
-									if tbl20.KHEnabled then
+									if tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
 										tbl23.ApplyKH(object)
 									end
 
 									return
 								end
 
-								if tbl20.KHEnabled then
+								if tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
 									tbl23.ApplyKH(object)
 								end
 
@@ -17610,7 +17265,7 @@ Listener.Observe = ObserveDevice
 
 								if tbl20.AvatarEnabled then
 									tbl23.Update(stack[200])
-								elseif tbl20.KHEnabled then
+								elseif tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
 									tbl23.ApplyKH(line)
 								end
 							end
@@ -17747,7 +17402,7 @@ Listener.Observe = ObserveDevice
 								coroutineFunction("Avatar")
 								tbl23.BindRun = tbl23.BindRun + 1
 								local middle = tbl23.BindRun
-								if not tbl20.AvatarEnabled and not tbl20.KHEnabled then
+								if not tbl20.AvatarEnabled and not (tbl20.KorbloxEnabled or tbl20.HeadlessEnabled) then
 									return
 								end
 								local results = {}
@@ -17761,7 +17416,7 @@ Listener.Observe = ObserveDevice
 										if not vertexCount or vertexCount.Character ~= playerInstance or playerInstance:GetAttribute("larpmarker1") ~= radians then
 											tbl23.Reconcile(playerInstance)
 										end
-									elseif tbl20.KHEnabled and (not steering or steering.Character ~= playerInstance) then
+									elseif (tbl20.KorbloxEnabled or tbl20.HeadlessEnabled) and (not steering or steering.Character ~= playerInstance) then
 										tbl23.ApplyKH(playerInstance)
 									end
 								end
@@ -17828,7 +17483,7 @@ Listener.Observe = ObserveDevice
 								if model then
 									tbl23.RestoreAppearance(model)
 
-									if tbl20.KHEnabled then
+									if tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
 										tbl23.ApplyKH(model)
 									end
 								else
@@ -17837,24 +17492,24 @@ Listener.Observe = ObserveDevice
 								end
 							end
 
-							tbl23.ToggleKH = function(actionName)
-								tbl20.KHEnabled = actionName
-								tbl23.Bind()
-								local model = localPlayer.Character
-								if not model then
-									tbl23.DiscardKH()
-									return
-								end
+							tbl23.ToggleKH = function()
+										tbl20.KHEnabled = tbl20.KorbloxEnabled or tbl20.HeadlessEnabled
+										tbl23.Bind()
+										local model = localPlayer.Character
+										if not model then
+											tbl23.DiscardKH()
+											return
+										end
 
-								if actionName then
-									if tbl23.IsAppearanceReady(model) and (not steering or steering.Character ~= model) then
-										tbl23.ApplyKH(model)
-									end
-								else
-									tbl23.RestoreKH(model)
-								end
-
-								if type(n24) ~= "number" or n24 > 4729 then
+										if tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
+											if tbl23.IsAppearanceReady(model) then
+												tbl23.ApplyKH(model)
+											end
+										else
+											tbl23.RestoreKH(model)
+										end
+									
+										if type(n24) ~= "number" or n24 > 4729 then
 									return
 								end
 
@@ -17898,6 +17553,7 @@ Listener.Observe = ObserveDevice
 						coroutineBody({
 							AbilityESPEnabled = false,
 							AbilityESPShowNames = false,
+							AbilityESPMatchOnly = false,
 							AbilityESPIconSize = 34,
 							AbilityESPTextSize = stack[11],
 						})
@@ -18334,8 +17990,29 @@ Listener.Observe = ObserveDevice
 							end
 						end
 
+						tbl25.Visuals.IsMatchPlayer = function(player, character)
+							if not character or not character.Parent then
+								return false
+							end
+
+							local matchFolder = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+							if not matchFolder or character.Parent ~= matchFolder then
+								return false
+							end
+
+							if player and player:GetAttribute("LobbyTraining") then
+								return false
+							end
+
+							return true
+						end
+
 						tbl25.Visuals.AddLabel = function(line, object)
 							if not (tbl20.AbilityESPEnabled or tbl20.AbilityESPShowNames) or not line or line == localPlayer then
+								return
+							end
+
+							if tbl20.AbilityESPMatchOnly and not tbl25.Visuals.IsMatchPlayer(line, object or tbl25.Visuals.GetESPCharacter(line)) then
 								return
 							end
 
@@ -18840,6 +18517,12 @@ Listener.Observe = ObserveDevice
 							local angleRadians = larpBBState.ESPLabels[line]
 							local track = tbl25.Visuals.GetESPAdornee(radians)
 
+							if tbl20.AbilityESPMatchOnly and not tbl25.Visuals.IsMatchPlayer(line, radians) then
+								tbl25.Visuals.DestroyLabel(angleRadians)
+								larpBBState.ESPLabels[line] = nil
+								return
+							end
+
 							if not line.Parent or not radians or not track then
 								tbl25.Visuals.DestroyLabel(angleRadians)
 								larpBBState.ESPLabels[line] = nil
@@ -19082,7 +18765,7 @@ Listener.Observe = ObserveDevice
 								if not larpBBState.Loaded or not larpBBState.AccuracyWarningReady or larpBBState.AccuracyWarned then
 									return
 								end
-														local index44 = 101 - math.clamp(tbl20.RandomizedParryAccuracy and (tbl20.RandomAccuracyMin + tbl20.RandomAccuracyMax) * 0.5 or tbl20.ParryAccuracy or 80, 1, 100)
+														local index44 = 101 - math.clamp(tbl20.RandomizedParryAccuracy and (tbl20.RandomAccuracyMin + tbl20.RandomAccuracyMax) * 0.5 or tbl20.ParryAccuracy or 80, 0, 100)
 
 														if latestPingMs and index44 >= 80 and latestPingMs >= 300 - index44 then
 									larpBBState.AccuracyWarned = true
@@ -19090,22 +18773,452 @@ Listener.Observe = ObserveDevice
 								end
 							end
 
-							v103 = v100.new({ Name = "Larp", AccentColor = colors.Accent })
-							tbl24 = { toggles = {}, sliders = {}, dropdowns = {}, textboxes = {} }
+								v103 = v100.new({ Name = "Larp", AccentColor = colors.Accent })
+								tbl24 = { toggles = {}, sliders = {}, dropdowns = {}, textboxes = {} }
 
-							local function handlePlayerRemoving()
-								local radians = v103:CreateSection({ Name = "Larp", Icon = "rbxassetid://76499042599127" })
+								local function handlePlayerRemoving()
+									local radians = v103:CreateSection({ Name = "Larp", Icon = "rbxassetid://76499042599127" })
 
-								local function onTouched(line)
-									return radians:AddTab({ Name = line, Description = "Main", Icon = "rbxassetid://76499042599127" })
-								end
+						local function onTouched(line)
+								return radians:AddTab({ Name = line, Description = "Main", Icon = line == "Main" and "rbxassetid://122670379908356" or line == "Player" and "rbxassetid://103596881538969" or line == "Avatar" and "rbxassetid://110345379832120" or line == "Detections" and "rbxassetid://95037751489754" or line == "Settings" and "rbxassetid://107905625978858" or line == "Misc" and "rbxassetid://77874503721804" or line == "Optimizations" and "rbxassetid://105927039387870" or line == "World" and "rbxassetid://115136633593747" or "rbxassetid://76499042599127" })
+						end
 
-								local entry = onTouched("Main")
-local playerTab = onTouched("Player")
+									local entry = onTouched("Main")
+									local playerTab = onTouched("Player")
+									local avatarTab = onTouched("Avatar")
 local part = onTouched("Detections")
 								local placeholder = onTouched("Misc")
 								local iterator = onTouched("Optimizations")
 								local entity = onTouched("Settings")
+								local worldTab = onTouched("World")
+								    do
+								        local worldLighting = game:GetService("Lighting")
+								        local mediaGroup = worldTab:AddGroup({ Name = "Media Skybox", Side = "Left", Icon = "rbxassetid://76499042599127" })
+								        local customizerGroup = worldTab:AddGroup({ Name = "World Customizer", Side = "Right", Icon = "rbxassetid://76499042599127" })
+
+								        local skyEnabled = false
+								        local skyInput = ""
+								        local savedSkyStates = {}
+								        local createdSky = nil
+								        local skyFaceProperties = { "SkyboxBk", "SkyboxDn", "SkyboxFt", "SkyboxLf", "SkyboxRt", "SkyboxUp" }
+
+								        local skyGeneration = 0
+
+local function parseRobloxImage(value)
+    local text = tostring(value or ""):match("^%s*(.-)%s*$")
+    if text:match("^%d+$") then
+        return "rbxassetid://" .. text
+    end
+    if text:match("^rbxassetid://(%d+)$") then
+        return text
+    end
+
+    local lowerText = string.lower(text)
+    if lowerText:find("roblox.com", 1, true) or lowerText:find("robloxusercontent.com", 1, true) then
+        local id = text:match("[?&]assetId=(%d+)")
+            or text:match("[?&]id=(%d+)")
+            or text:match("/library/(%d+)")
+            or text:match("/catalog/(%d+)")
+            or text:match("/asset/(%d+)")
+            or text:match("/store/asset/(%d+)")
+        return id and ("rbxassetid://" .. id) or nil
+    end
+    return nil
+end
+
+local function restoreSkybox()
+    skyGeneration += 1
+    for _, state in ipairs(savedSkyStates) do
+        if state.Sky and state.Sky.Parent then
+            for _, property in ipairs(skyFaceProperties) do
+                pcall(function()
+                    state.Sky[property] = state[property]
+                end)
+            end
+        end
+    end
+    table.clear(savedSkyStates)
+    if createdSky then
+        pcall(function()
+            createdSky:Destroy()
+        end)
+        createdSky = nil
+    end
+end
+
+local function setSkyboxAsset(asset)
+    if #savedSkyStates == 0 and not createdSky then
+        for _, child in ipairs(worldLighting:GetChildren()) do
+            if child:IsA("Sky") then
+                local state = { Sky = child }
+                for _, property in ipairs(skyFaceProperties) do
+                    state[property] = child[property]
+                end
+                table.insert(savedSkyStates, state)
+            end
+        end
+        if #savedSkyStates == 0 then
+            createdSky = Instance.new("Sky")
+            createdSky.Name = "LarpLocalCustomSky"
+            createdSky.Parent = worldLighting
+        end
+    end
+
+    local ok = pcall(function()
+        if createdSky then
+            for _, property in ipairs(skyFaceProperties) do
+                createdSky[property] = asset
+            end
+        else
+            for _, state in ipairs(savedSkyStates) do
+                if state.Sky and state.Sky.Parent then
+                    for _, property in ipairs(skyFaceProperties) do
+                        state.Sky[property] = asset
+                    end
+                end
+            end
+        end
+    end)
+    if not ok then
+        restoreSkybox()
+        return false
+    end
+    return true
+end
+
+local function applySkybox()
+    local input = tostring(skyInput or ""):match("^%s*(.-)%s*$")
+    if input == "" then
+        v103:Notify({ Title = "Paste a direct PNG/JPG image URL or a Roblox image asset ID.", Duration = 5 })
+        return false
+    end
+
+    local asset = parseRobloxImage(input)
+    if asset then
+        skyGeneration += 1
+        if not setSkyboxAsset(asset) then
+            v103:Notify({ Title = "Could not apply this image asset to the skybox.", Duration = 5 })
+            return false
+        end
+        return true
+    end
+
+    if not input:match("^https?://") then
+        v103:Notify({ Title = "Use a Roblox image ID/URL or a direct HTTP(S) PNG/JPG link.", Duration = 5 })
+        return false
+    end
+
+    skyGeneration += 1
+    local generation = skyGeneration
+    task.spawn(function()
+        local ok, localAsset = pcall(function()
+            local assetLoader = getcustomasset or getsynasset
+            local requestFunction = (syn and syn.request) or http_request or request
+            if type(assetLoader) ~= "function" then
+                error("executor does not support getcustomasset/getsynasset")
+            end
+            if type(writefile) ~= "function" or type(isfolder) ~= "function" or type(makefolder) ~= "function" then
+                error("executor does not support local file operations")
+            end
+
+            local responseBody
+            local response
+            if type(requestFunction) == "function" then
+                response = requestFunction({ Url = input, Method = "GET" })
+                if type(response) == "table" then
+                    if response.Success == false or (tonumber(response.StatusCode) and tonumber(response.StatusCode) >= 400) then
+                        error("HTTP download failed")
+                    end
+                    responseBody = response.Body
+                end
+            else
+                responseBody = game:HttpGet(input)
+            end
+            if type(responseBody) ~= "string" or #responseBody == 0 or #responseBody > 12 * 1024 * 1024 then
+                error("empty response or response exceeds 12 MB")
+            end
+
+            local extension = input:match("%.([%w]+)[?#]") or input:match("%.([%w]+)$")
+            local headers = type(response) == "table" and (response.Headers or response.headers) or nil
+            local contentType = type(headers) == "table" and (headers["Content-Type"] or headers["content-type"]) or ""
+            contentType = string.lower(tostring(contentType))
+            if contentType:find("image/gif", 1, true) or (extension and string.lower(extension) == "gif") then
+                error("GIF animation is not supported for skyboxes")
+            end
+            if not extension or (string.lower(extension) ~= "png" and string.lower(extension) ~= "jpg" and string.lower(extension) ~= "jpeg") then
+                if contentType:find("image/jpeg", 1, true) then
+                    extension = "jpg"
+                elseif contentType:find("image/png", 1, true) then
+                    extension = "png"
+                else
+                    error("The link did not return a recognized PNG/JPG image")
+                end
+            end
+            extension = string.lower(extension)
+
+            if not isfolder("Larp") then
+                makefolder("Larp")
+            end
+            local imagePath = ("Larp/WorldSkybox_%d.%s"):format(generation, extension)
+            writefile(imagePath, responseBody)
+            return assetLoader(imagePath)
+        end)
+
+        if not skyEnabled or generation ~= skyGeneration then
+            return
+        end
+        if ok and type(localAsset) == "string" and setSkyboxAsset(localAsset) then
+            return
+        end
+        v103:Notify({ Title = "Could not load this link. Use a direct PNG/JPG URL and an executor with local asset support.", Duration = 6 })
+    end)
+    return true
+end
+
+tbl24.toggles.WorldMediaSkybox = mediaGroup:AddToggle({
+								            Name = "Enable Media Skybox",
+								            SaveId = "World_Media_Skybox",
+								            Default = false,
+								            Callback = function(enabled)
+								                skyEnabled = enabled
+								                if enabled then
+								                    applySkybox()
+								                else
+								                    restoreSkybox()
+								                end
+								            end,
+								        })
+
+								        tbl24.textboxes.WorldMediaSkyboxImage = mediaGroup:AddTextbox({
+									            Name = "Image / Direct Link",
+									            SaveId = "World_Media_Skybox_Image",
+									            Default = "",
+									            Placeholder = "Roblox asset ID or direct PNG/JPG URL",
+								            Callback = function(value)
+								                skyInput = tostring(value or "")
+								                if skyEnabled and skyInput ~= "" then
+								                    applySkybox()
+								                elseif skyInput == "" and skyEnabled then
+								                    skyEnabled = false
+								                    restoreSkybox()
+								                end
+								            end,
+								        })
+
+								        local fogEnabled = false
+								        local fogDistance = 10000
+								        local originalFog = nil
+								        local saturationEnabled = false
+								        local saturationValue = 0
+								        local brightnessEnabled = false
+								        local brightnessValue = 0
+								        local contrastEnabled = false
+								        local contrastValue = 0
+								        local colorEffect = nil
+								        local clockEnabled = false
+								        local clockValue = 12
+								        local originalClock = nil
+								        local clockConnection = nil
+								        local settingClock = false
+
+								        local function applyFog()
+								            if fogEnabled then
+								                if not originalFog then
+								                    originalFog = { Start = worldLighting.FogStart, End = worldLighting.FogEnd }
+								                end
+								                worldLighting.FogStart = 0
+								                worldLighting.FogEnd = math.max(1, fogDistance)
+								            elseif originalFog then
+								                worldLighting.FogStart = originalFog.Start
+								                worldLighting.FogEnd = originalFog.End
+								                originalFog = nil
+								            end
+								        end
+
+								        local function updateColorEffect()
+								            local anyEnabled = saturationEnabled or brightnessEnabled or contrastEnabled
+								            if not anyEnabled then
+								                if colorEffect then
+								                    colorEffect:Destroy()
+								                    colorEffect = nil
+								                end
+								                return
+								            end
+								            if not colorEffect or not colorEffect.Parent then
+								                colorEffect = Instance.new("ColorCorrectionEffect")
+								                colorEffect.Name = "LarpLocalWorldColorCorrection"
+								                colorEffect.Parent = worldLighting
+								            end
+								            colorEffect.Saturation = saturationEnabled and saturationValue or 0
+								            colorEffect.Brightness = brightnessEnabled and brightnessValue or 0
+								            colorEffect.Contrast = contrastEnabled and contrastValue or 0
+								        end
+
+								        local function stopClock()
+								            clockEnabled = false
+								            if clockConnection then
+								                clockConnection:Disconnect()
+								                clockConnection = nil
+								            end
+								            if originalClock ~= nil then
+								                local restoreValue = originalClock
+								                originalClock = nil
+								                worldLighting.ClockTime = restoreValue
+								            end
+								        end
+
+								        local function applyClock()
+								            if not clockEnabled then
+								                return
+								            end
+								            if originalClock == nil then
+								                originalClock = worldLighting.ClockTime
+								            end
+								            if not clockConnection then
+								                clockConnection = worldLighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+								                    if clockEnabled and not settingClock and math.abs(worldLighting.ClockTime - clockValue) > 0.001 then
+								                        settingClock = true
+								                        worldLighting.ClockTime = clockValue
+								                        settingClock = false
+								                    end
+								                end)
+								            end
+								            settingClock = true
+								            worldLighting.ClockTime = math.clamp(clockValue, 0, 24)
+								            settingClock = false
+								        end
+
+								        local function restoreWorldCustomizer()
+								            fogEnabled = false
+								            applyFog()
+								            stopClock()
+								            saturationEnabled = false
+								            brightnessEnabled = false
+								            contrastEnabled = false
+								            updateColorEffect()
+								            skyEnabled = false
+								            restoreSkybox()
+								        end
+								        larpBBState.WorldCustomizerRestore = restoreWorldCustomizer
+
+								        tbl24.toggles.WorldFog = customizerGroup:AddToggle({
+								            Name = "Enable Fog",
+								            SaveId = "World_Fog_Enabled",
+								            Default = false,
+								            Callback = function(enabled)
+								                fogEnabled = enabled
+								                applyFog()
+								            end,
+								        })
+								        tbl24.sliders.WorldFogDistance = customizerGroup:AddSlider({
+								            Name = "Fog Distance",
+								            SaveId = "World_Fog_Distance",
+								            Min = 0,
+								            Max = 50000,
+								            Default = 10000,
+								            Increment = 500,
+								            Callback = function(value)
+								                fogDistance = tonumber(value) or fogDistance
+								                if fogEnabled then
+								                    applyFog()
+								                end
+								            end,
+								        })
+
+								        tbl24.toggles.WorldSaturation = customizerGroup:AddToggle({
+								            Name = "Enable Saturation",
+								            SaveId = "World_Saturation_Enabled",
+								            Default = false,
+								            Callback = function(enabled)
+								                saturationEnabled = enabled
+								                updateColorEffect()
+								            end,
+								        })
+								        tbl24.sliders.WorldSaturation = customizerGroup:AddSlider({
+								            Name = "Saturation",
+								            SaveId = "World_Saturation",
+								            Min = -1,
+								            Max = 1,
+								            Default = 0,
+								            Increment = 0.05,
+								            Callback = function(value)
+								                saturationValue = tonumber(value) or 0
+								                updateColorEffect()
+								            end,
+								        })
+
+								        tbl24.toggles.WorldBrightness = customizerGroup:AddToggle({
+								            Name = "Enable Brightness",
+								            SaveId = "World_Brightness_Enabled",
+								            Default = false,
+								            Callback = function(enabled)
+								                brightnessEnabled = enabled
+								                updateColorEffect()
+								            end,
+								        })
+								        tbl24.sliders.WorldBrightness = customizerGroup:AddSlider({
+								            Name = "Brightness",
+								            SaveId = "World_Brightness",
+								            Min = -1,
+								            Max = 1,
+								            Default = 0,
+								            Increment = 0.05,
+								            Callback = function(value)
+								                brightnessValue = tonumber(value) or 0
+								                updateColorEffect()
+								            end,
+								        })
+
+								        tbl24.toggles.WorldContrast = customizerGroup:AddToggle({
+								            Name = "Enable Contrast",
+								            SaveId = "World_Contrast_Enabled",
+								            Default = false,
+								            Callback = function(enabled)
+								                contrastEnabled = enabled
+								                updateColorEffect()
+								            end,
+								        })
+								        tbl24.sliders.WorldContrast = customizerGroup:AddSlider({
+								            Name = "Contrast",
+								            SaveId = "World_Contrast",
+								            Min = -1,
+								            Max = 1,
+								            Default = 0,
+								            Increment = 0.05,
+								            Callback = function(value)
+								                contrastValue = tonumber(value) or 0
+								                updateColorEffect()
+								            end,
+								        })
+
+								        tbl24.toggles.WorldClockTime = customizerGroup:AddToggle({
+								            Name = "Enable Clock Time",
+								            SaveId = "World_Clock_Enabled",
+								            Default = false,
+								            Callback = function(enabled)
+								                clockEnabled = enabled
+								                if enabled then
+								                    applyClock()
+								                else
+								                    stopClock()
+								                end
+								            end,
+								        })
+								        tbl24.sliders.WorldClockTime = customizerGroup:AddSlider({
+								            Name = "Clock Time (0–24)",
+								            SaveId = "World_Clock_Time",
+								            Min = 0,
+								            Max = 24,
+								            Default = 12,
+								            Increment = 0.25,
+								            Callback = function(value)
+								                clockValue = tonumber(value) or 12
+								                if clockEnabled then
+								                    applyClock()
+								                end
+								            end,
+								        })
+								    end
 
 -- ===== LARP PLAYER TAB =====
 do
@@ -19453,8 +19566,448 @@ applyJump()
 end
 end,
 })
+-- ===== LARP GRAVITY =====
+do
+	local gravityState = {
+		Enabled = false,
+		Value = 196.2,
+		Original = nil
+	}
+
+	local function applyGravity()
+		if not gravityState.Enabled then
+			return
+		end
+
+		workspace.Gravity = math.clamp(
+			tonumber(gravityState.Value) or 196.2,
+			0,
+			1000
+		)
+	end
+
+	local function restoreGravity()
+		if gravityState.Original then
+			workspace.Gravity = gravityState.Original
+			gravityState.Original = nil
+		end
+	end
+
+	local gravityGroup = playerTab:AddGroup({
+		Name = "Gravity",
+		Side = "Right",
+		Icon = "rbxassetid://10723427199"
+	})
+
+	tbl24.toggles.GravityEnabled = gravityGroup:AddToggle({
+		Name = "Enable Gravity",
+		SaveId = "Player_GravityEnabled",
+		Default = false,
+		Callback = function(value)
+			gravityState.Enabled = value and true or false
+
+			if gravityState.Enabled then
+				if not gravityState.Original then
+					gravityState.Original = workspace.Gravity
+				end
+
+				applyGravity()
+			else
+				gravityState.Value = gravityState.Original or 196.2
+				restoreGravity()
+
+				local gravitySlider = tbl24.sliders.Gravity
+				if gravitySlider and gravitySlider.Set then
+					gravitySlider:Set(gravityState.Value)
+				end
+			end
+		end,
+	})
+
+	tbl24.sliders.Gravity = gravityGroup:AddSlider({
+		Name = "Gravity",
+		SaveId = "Player_Gravity",
+		Min = 0,
+		Max = 1000,
+		Default = 196.2,
+		Increment = 1,
+		Callback = function(value)
+			gravityState.Value = tonumber(value) or 196.2
+
+			if gravityState.Enabled then
+				applyGravity()
+			end
+		end,
+	})
+
+	-- ao fechar o Larp: devolve a gravidade original
+	local gravityBaseReset = playerMods.Reset
+
+	playerMods.Reset = function()
+		if gravityBaseReset then
+			gravityBaseReset()
+		end
+
+		gravityState.Enabled = false
+		restoreGravity()
+	end
+end
+-- ===== END LARP GRAVITY =====
+
 end
 -- ===== END LARP SPIN BOT + JUMP MODIFIER =====
+-- ===== LARP IMMORTALITY (portado do BB Achaotic) =====
+do
+local immoOk, immoErr = pcall(function()
+	local immoRunService = game:GetService("RunService")
+	local immoTween = game:GetService("TweenService")
+	local immoUIS = game:GetService("UserInputService")
+	local immoPlayers = game:GetService("Players")
+	local immoPlayer = immoPlayers.LocalPlayer
+
+	local Immortality = {
+		Enabled = false,
+		SpeedBypassEnabled = true,
+		Angle = 72,
+		Height = 15,
+		Depth = -8,
+		SquareRadius = 10,
+		UI = false,
+	}
+
+	local desyncCFrame = nil
+	local desyncVelocity = nil
+	local immoButton = nil
+	local immoGui = nil
+
+	local function getChar()
+		return immoPlayer.Character
+	end
+
+	local function getRoot()
+		local character = getChar()
+		return character and character:FindFirstChild("HumanoidRootPart")
+	end
+
+	-- ===== botão na tela =====
+	local function setButtonColor(active)
+		if not immoButton then
+			return
+		end
+
+		local target = active and Color3.fromRGB(0, 170, 90) or Color3.fromRGB(152, 152, 152)
+		pcall(function()
+			immoTween:Create(immoButton, TweenInfo.new(0.2), { BackgroundColor3 = target }):Play()
+			immoTween:Create(immoButton.UIStroke, TweenInfo.new(0.2), { Color = target }):Play()
+		end)
+		immoButton.Text = active and "IMMO ACTIVE" or "Immortality"
+	end
+
+	local function setToggleValue(toggle, value)
+		if not toggle then
+			return
+		end
+		if toggle.SetValue then
+			pcall(toggle.SetValue, toggle, value)
+		elseif toggle.Set then
+			pcall(toggle.Set, toggle, value)
+		end
+	end
+
+	local function setEnabled(value, fromUI)
+		Immortality.Enabled = value and true or false
+		setButtonColor(Immortality.Enabled)
+
+		if fromUI then
+			setToggleValue(tbl24.toggles.ImmortalityEnabled, Immortality.Enabled)
+		end
+
+		if not Immortality.Enabled then
+			desyncCFrame = nil
+			desyncVelocity = nil
+		end
+	end
+
+	local function buildButton()
+		if immoGui then
+			return
+		end
+
+		immoGui = Instance.new("ScreenGui")
+		immoGui.Name = "LarpImmortalityGui"
+		immoGui.ResetOnSpawn = false
+		immoGui.IgnoreGuiInset = true
+		immoGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		immoGui.Enabled = Immortality.UI
+
+		local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
+		if syn and syn.protect_gui then
+			pcall(syn.protect_gui, immoGui)
+		end
+		immoGui.Parent = parentGui
+
+		local handler = Instance.new("Frame")
+		handler.Name = "ImmortalityHandler"
+		handler.AnchorPoint = Vector2.new(0.5, 0.5)
+		handler.Position = UDim2.new(0.1, 0, 0.5, 0)
+		handler.Size = UDim2.new(0, 140, 0, 70)
+		handler.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+		handler.BackgroundTransparency = 0.1
+		handler.BorderSizePixel = 0
+		handler.Active = true
+		handler.Parent = immoGui
+
+		local handlerCorner = Instance.new("UICorner")
+		handlerCorner.CornerRadius = UDim.new(0, 6)
+		handlerCorner.Parent = handler
+
+		immoButton = Instance.new("TextButton")
+		immoButton.Name = "ImmortalityButton"
+		immoButton.AnchorPoint = Vector2.new(0.5, 0.5)
+		immoButton.Position = UDim2.new(0.5, 0, 0.5, 0)
+		immoButton.Size = UDim2.new(1, -15, 1, -15)
+		immoButton.BackgroundColor3 = Color3.fromRGB(152, 152, 152)
+		immoButton.BackgroundTransparency = 0.75
+		immoButton.BorderSizePixel = 0
+		immoButton.Text = "Immortality"
+		immoButton.TextColor3 = Color3.new(1, 1, 1)
+		immoButton.TextTransparency = 0.25
+		immoButton.TextSize = 18
+		immoButton.Font = Enum.Font.GothamBold
+		immoButton.TextWrapped = true
+		immoButton.AutoButtonColor = false
+		immoButton.Parent = handler
+
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0, 4)
+		buttonCorner.Parent = immoButton
+
+		local buttonStroke = Instance.new("UIStroke")
+		buttonStroke.Color = Color3.fromRGB(152, 152, 152)
+		buttonStroke.Transparency = 0.5
+		buttonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		buttonStroke.Parent = immoButton
+
+		-- clique alterna / arrastar move
+		local dragging, dragStart, startPos, moved = false, nil, nil, false
+
+		trackConnection(immoButton.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				moved = false
+				dragStart = input.Position
+				startPos = handler.Position
+			end
+		end))
+
+		trackConnection(immoUIS.InputChanged:Connect(function(input)
+			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				local delta = input.Position - dragStart
+				if delta.Magnitude > 6 then
+					moved = true
+				end
+				handler.Position = UDim2.new(
+					startPos.X.Scale, startPos.X.Offset + delta.X,
+					startPos.Y.Scale, startPos.Y.Offset + delta.Y
+				)
+			end
+		end))
+
+		trackConnection(immoUIS.InputEnded:Connect(function(input)
+			if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+				dragging = false
+				if not moved then
+					setEnabled(not Immortality.Enabled, true)
+				end
+			end
+		end))
+
+		setButtonColor(Immortality.Enabled)
+	end
+
+	-- ===== UI na aba Player =====
+	local immoGroup = playerTab:AddGroup({ Name = "Immortality", Side = "Left", Icon = "rbxassetid://10723427199" })
+
+	tbl24.toggles.ImmortalityEnabled = immoGroup:AddToggle({
+		Name = "Enable Immortality",
+		SaveId = "Player_Immortality_Enabled",
+		Default = false,
+		Callback = function(value)
+			setEnabled(value, false)
+		end,
+	})
+
+	tbl24.toggles.ImmortalitySpeedBypass = immoGroup:AddToggle({
+		Name = "Speed Bypass",
+		SaveId = "Player_Immortality_SpeedBypass",
+		Default = true,
+		Callback = function(value)
+			Immortality.SpeedBypassEnabled = value and true or false
+		end,
+	})
+
+	tbl24.toggles.ImmortalityUI = immoGroup:AddToggle({
+		Name = "Show Button",
+		SaveId = "Player_Immortality_UI",
+		Default = false,
+		Callback = function(value)
+			Immortality.UI = value and true or false
+			if Immortality.UI then
+				buildButton()
+			end
+			if immoGui then
+				immoGui.Enabled = Immortality.UI
+			end
+		end,
+	})
+
+	tbl24.sliders.ImmortalityAngle = immoGroup:AddSlider({
+		Name = "Angle",
+		SaveId = "Player_Immortality_Angle",
+		Min = 0,
+		Max = 100,
+		Default = 72,
+		Increment = 1,
+		Callback = function(value)
+			Immortality.Angle = tonumber(value) or 72
+		end,
+	})
+
+	tbl24.sliders.ImmortalityHeight = immoGroup:AddSlider({
+		Name = "Height",
+		SaveId = "Player_Immortality_Height",
+		Min = 0,
+		Max = 270,
+		Default = 15,
+		Increment = 1,
+		Callback = function(value)
+			Immortality.Height = tonumber(value) or 15
+		end,
+	})
+
+	tbl24.sliders.ImmortalityDepth = immoGroup:AddSlider({
+		Name = "Depth",
+		SaveId = "Player_Immortality_Depth",
+		Min = 0,
+		Max = 8,
+		Default = 8,
+		Increment = 1,
+		Callback = function(value)
+			Immortality.Depth = -(tonumber(value) or 8)
+		end,
+	})
+
+	tbl24.sliders.ImmortalityRadius = immoGroup:AddSlider({
+		Name = "Radius",
+		SaveId = "Player_Immortality_Radius",
+		Min = 10,
+		Max = 100,
+		Default = 10,
+		Increment = 1,
+		Callback = function(value)
+			Immortality.SquareRadius = tonumber(value) or 10
+		end,
+	})
+
+	-- ===== loop principal =====
+	trackConnection(immoRunService.Heartbeat:Connect(function()
+		if not Immortality.Enabled then
+			return
+		end
+
+		local hrp = getRoot()
+		if not hrp then
+			return
+		end
+
+		if Immortality.SpeedBypassEnabled and setfflag then
+			pcall(setfflag, "S2PhysicsSenderRate", "1333335")
+		end
+
+		hrp.CFrame = hrp.CFrame + Vector3.new(0, 0.01, 0)
+		desyncCFrame = hrp.CFrame
+		desyncVelocity = hrp.AssemblyLinearVelocity
+
+		local currentTime = tick()
+		local angle = currentTime * math.pi * 2 * Immortality.Angle / 5
+		local cycle = math.floor(currentTime * 29) % 2
+		local yOffset = (cycle == 0) and Immortality.Depth or Immortality.Height
+
+		local offset = Vector3.new(
+			math.cos(angle) * Immortality.SquareRadius,
+			yOffset,
+			math.sin(angle) * Immortality.SquareRadius
+		)
+
+		hrp.CFrame = desyncCFrame + offset
+		hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+
+		immoRunService.RenderStepped:Wait()
+
+		if hrp.Parent then
+			hrp.CFrame = desyncCFrame
+			hrp.AssemblyLinearVelocity = desyncVelocity
+		end
+	end))
+
+	-- ===== hook de __index (instalado uma vez; fica inerte quando desligado) =====
+	local genv = getgenv()
+	genv.LarpImmortalityState = Immortality
+	genv.LarpImmortalityGetDesync = function()
+		return desyncCFrame
+	end
+
+	if hookmetamethod and newcclosure and not genv.LarpImmortalityHooked then
+		genv.LarpImmortalityHooked = true
+
+		local oldIndex
+		oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
+			local state = genv.LarpImmortalityState
+			if state and state.Enabled and key == "CFrame" and not checkcaller() then
+				local character = immoPlayer.Character
+				local root = character and character:FindFirstChild("HumanoidRootPart")
+				local cf = genv.LarpImmortalityGetDesync and genv.LarpImmortalityGetDesync()
+
+				if root and cf then
+					if self == root then
+						return cf
+					end
+
+					local head = character:FindFirstChild("Head")
+					if head and self == head then
+						return cf + Vector3.new(0, root.Size.Y / 2 + 0.5, 0)
+					end
+				end
+			end
+
+			return oldIndex(self, key)
+		end))
+	end
+
+	-- ao fechar o Larp: desliga e remove o botão
+	local immoBaseReset = playerMods.Reset
+
+	playerMods.Reset = function()
+		if immoBaseReset then
+			immoBaseReset()
+		end
+
+		Immortality.Enabled = false
+		desyncCFrame = nil
+		desyncVelocity = nil
+
+		if immoGui then
+			immoGui:Destroy()
+			immoGui = nil
+			immoButton = nil
+		end
+	end
+end)
+if not immoOk then
+	warn("[Larp] Immortality falhou ao carregar: " .. tostring(immoErr))
+end
+end
+-- ===== END LARP IMMORTALITY =====
 
 								local function heartbeatUpdate(line, object, descendant)
 									local angleRadians = line and tbl24.toggles[line]
@@ -19474,10 +20027,10 @@ end
 									v103:Notify({ Title = "Switched to " .. object .. " " .. descendant, Duration = 2 })
 								end
 
-								local function onInputChanged()
-									local angleRadians = entry:AddGroup({ Name = "Parry", Side = "Left", Icon = "rbxassetid://10723427199" })
+						local function onInputChanged()
+							local angleRadians = entry:AddGroup({ Name = "Auto Parry", Side = "Left", Icon = "rbxassetid://10723427199" })
 
-									tbl24.toggles.Auto_Parry = angleRadians:AddToggle({
+							tbl24.toggles.Auto_Parry = angleRadians:AddToggle({
 										Name = "Auto Parry",
 										SaveId = "Auto_Parry",
 										Default = false,
@@ -19516,19 +20069,8 @@ end
 										end,
 									})
 
-									tbl24.toggles.Anti_Curve = angleRadians:AddToggle({
-										Name = "Anticurve",
-										SaveId = "Anticurve",
-										Default = stack[200],
-										Callback = operation("AntiCurveEnabled", function()
-											for _, propertyName in managerObject, nil, nil do
-												index14(propertyName)
-											end
-										end),
-									})
-
 									tbl24.toggles.Backwards_Anti_Curve = angleRadians:AddToggle({
-										Name = "Backwards Anticurve",
+										Name = "Backward Detections",
 										SaveId = "Backwards_Anticurve",
 										Default = true,
 										Callback = operation("BackwardsAntiCurveEnabled", function(line)
@@ -19542,6 +20084,55 @@ end
 										end),
 									})
 
+									tbl24.toggles.Anti_Curve = angleRadians:AddToggle({
+										Name = "Anticurve",
+										SaveId = "Anticurve",
+										Default = stack[200],
+										Callback = operation("AntiCurveEnabled", function()
+											for _, propertyName in managerObject, nil, nil do
+												index14(propertyName)
+											end
+										end),
+									})
+									tbl24.sliders.ParryAccuracy = angleRadians:AddSlider({
+										Name = "Accuracy",
+										SaveId = "Parry_Accuracy",
+										Min = 0,
+										Max = stack[158],
+										Default = 0,
+										Increment = 1,
+										Callback = operation("ParryAccuracy"),
+										OnCommit = onInputEnded,
+									})
+									tbl24.sliders.ParryRange = angleRadians:AddSlider({
+										Name = "Parry Range",
+										SaveId = "Parry_Range",
+										Min = 0,
+										Max = 10,
+										Default = 0,
+										Increment = 1,
+										Callback = operation("ParryRange"),
+									})
+									tbl24.toggles.RandomizedParryAccuracy = angleRadians:AddToggle({
+										Name = "Randomize Accuracy",
+										SaveId = "Randomized_Parry_Accuracy",
+										Default = false,
+										Callback = operation("RandomizedParryAccuracy", onInputEnded),
+									})
+									tbl24.sliders.Random_Accuracy_Range = angleRadians:AddDoubleSlider({
+										Name = "Accuracy Range",
+										SaveId = "Randomized_Parry_Accuracy_Range",
+										Min = 1,
+										Max = 100,
+										DefaultMin = 1,
+										DefaultMax = 100,
+										Increment = 1,
+										Callback = function(player11, value3)
+											tbl20.RandomAccuracyMin = player11
+											tbl20.RandomAccuracyMax = value3
+										end,
+										OnCommit = onInputEnded,
+									})
 									tbl24.dropdowns.Parry_Type = angleRadians:AddDropdown({
 										Name = "Parry Type",
 										SaveId = "Auto_Parry_Type",
@@ -19551,7 +20142,6 @@ end
 											heartbeatUpdate("Auto_Parry", line, "mode")
 										end),
 									})
-
 									tbl24.dropdowns.Curve_Type = angleRadians:AddDropdown({
 										Name = "Curve Type",
 										SaveId = "Selected_Parry_Type",
@@ -19574,7 +20164,6 @@ end
 											heartbeatUpdate("Auto_Parry", player12, "type")
 										end,
 									})
-
 -- ===================== TARGET PLAYER =====================
 tbl20.TargetPlayerName = nil
 tbl25.Target = {}
@@ -19591,36 +20180,83 @@ tbl25.Target.GetPlayer = function()
 	return target
 end
 
+-- o alvo so vale se estiver vivo e na mesma partida que voce (senao o parry volta ao normal)
+tbl25.Target.IsValid = function()
+	local target = tbl25.Target.GetPlayer()
+	if not target then
+		return false
+	end
+
+	local targetChar = target.Character
+	if not targetChar or not targetChar.Parent then
+		return false
+	end
+
+	local targetHumanoid = targetChar:FindFirstChildOfClass("Humanoid")
+	if targetHumanoid and targetHumanoid.Health <= 0 then
+		return false
+	end
+
+	if not targetChar:FindFirstChild("HumanoidRootPart") then
+		return false
+	end
+
+	local matchFolder = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+	local myChar = localPlayer.Character
+
+	if matchFolder and myChar and myChar.Parent == matchFolder and targetChar.Parent ~= matchFolder then
+		return false
+	end
+
+	return true
+end
+
+tbl25.Target.IsActive = function()
+	return tbl20.TargetPlayerName ~= nil and tbl25.Target.IsValid()
+end
+
 -- retorna: CFrame olhando pro alvo, tabela {nome = posicaoNaTela}, {x, y} da tela
 tbl25.Target.Cache = { At = 0, Name = nil }
 tbl25.Target.GetData = function()
 	local cache = tbl25.Target.Cache
 	local name = tbl20.TargetPlayerName
 	local now = os.clock()
-	if cache.Name == name and now - cache.At < 0.008 then
+
+	if cache.Name == name and now - cache.At < 0.004 then
 		return cache.CFrame, cache.List, cache.Coords
 	end
+
 	cache.At, cache.Name = now, name
 	cache.CFrame, cache.List, cache.Coords = nil, nil, nil
-	local target = tbl25.Target.GetPlayer()
-	if not target then
+
+	if not name or not tbl25.Target.IsValid() then
 		return nil
 	end
+
+	local target = tbl25.Target.GetPlayer()
 	local myChar = localPlayer.Character
 	local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-	local targetChar = target.Character
+	local targetChar = target and target.Character
 	local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
 	local camera = workspace.CurrentCamera
+
 	if not (myRoot and targetRoot and camera) then
 		return nil
 	end
-	if (targetRoot.Position - myRoot.Position).Magnitude < 0.001 then
+
+	local fromPosition = myRoot.Position
+	local toPosition = targetRoot.Position
+
+	if (toPosition - fromPosition).Magnitude < 0.001 then
 		return nil
 	end
-	local screenPoint = camera:WorldToScreenPoint(targetRoot.Position)
-	cache.CFrame = CFrame.lookAt(myRoot.Position, targetRoot.Position)
+
+	local screenPoint = camera:WorldToScreenPoint(toPosition)
+
+	cache.CFrame = CFrame.lookAt(fromPosition, toPosition)
 	cache.List = { [targetChar.Name] = screenPoint }
 	cache.Coords = { screenPoint.X, screenPoint.Y }
+
 	return cache.CFrame, cache.List, cache.Coords
 end
 
@@ -19695,6 +20331,22 @@ tbl25.Target.UpdateHighlight = function()
 		tbl25.Target.ApplyHighlight(character)
 	end)
 end
+
+									tbl24.dropdowns.Parry_Loop = angleRadians:AddDropdown({
+										Name = "Parry Loop",
+										SaveId = "Parry_Loop_Type",
+										Options = { "PreSimulation", "PreRender" },
+										Default = "PreSimulation",
+										Callback = function(handler)
+											tbl20.ParryLoopType = handler
+											if not larpBBState.Loaded then
+												return
+											end
+											coroutineFunction("Auto Parry")
+											larpBBState.Connections["Auto Parry"] = (handler == "PreRender" and runService.PreRender or runService.PreSimulation):Connect(tbl25.Loop.MainParryLoop)
+										end,
+									})
+
 tbl24.dropdowns.Target_Player = angleRadians:AddDropdown({
 	Name = "Target Player",
 	SaveId = "Target_Player_Name",
@@ -19706,15 +20358,15 @@ tbl24.dropdowns.Target_Player = angleRadians:AddDropdown({
 		tbl25.Target.UpdateHighlight()
 	end,
 })
+							angleRadians:AddDivider()
 
-tbl24.toggles.Test = angleRadians:AddToggle({
-	Name = "Test",
-	SaveId = "Test_Option",
-	Default = false,
-	Callback = function(value)
-		-- opcao de teste: nao faz nada
-	end,
-})
+
+
+
+
+
+
+
 
 tbl25.Target.RefreshList = function()
 	local dropdown = tbl24.dropdowns.Target_Player
@@ -19741,70 +20393,14 @@ larpBBState.Connections["Target Player Removing"] = game:GetService("Players").P
 end)
 -- =========================================================
 
-									tbl24.dropdowns.Parry_Loop = angleRadians:AddDropdown({
-										Name = "Parry Loop",
-										SaveId = "Parry_Loop_Type",
-										Options = { "PreSimulation", "PreRender" },
-										Default = "PreSimulation",
-										Callback = function(handler)
-											tbl20.ParryLoopType = handler
-											if not larpBBState.Loaded then
-												return
-											end
-											coroutineFunction("Auto Parry")
-											larpBBState.Connections["Auto Parry"] = (handler == "PreRender" and runService.PreRender or runService.PreSimulation):Connect(tbl25.Loop.MainParryLoop)
-										end,
-									})
 
-									angleRadians:AddDivider()
+									
 
-									tbl24.sliders.ParryAccuracy = angleRadians:AddSlider({
-										Name = "Accuracy",
-										SaveId = "Parry_Accuracy",
-										Min = 1,
-										Max = stack[158],
-										Default = 80,
-										Increment = 1,
-										Callback = operation("ParryAccuracy"),
-										OnCommit = onInputEnded,
-									})
 
-									tbl24.sliders.ParryRange = angleRadians:AddSlider({
-										Name = "Parry Range",
-										SaveId = "Parry_Range",
-										Min = 0,
-										Max = 10,
-										Default = 0,
-										Increment = 1,
-										Callback = operation("ParryRange"),
-									})
+									
 
-									angleRadians:AddDivider()
 
-									tbl24.toggles.RandomizedParryAccuracy = angleRadians:AddToggle({
-										Name = "Randomize Accuracy",
-										SaveId = "Randomized_Parry_Accuracy",
-										Default = false,
-										Callback = operation("RandomizedParryAccuracy", onInputEnded),
-									})
-
-									tbl24.sliders.Random_Accuracy_Range = angleRadians:AddDoubleSlider({
-										Name = "Accuracy Range",
-										SaveId = "Randomized_Parry_Accuracy_Range",
-										Min = 1,
-										Max = 100,
-										DefaultMin = 1,
-										DefaultMax = 100,
-										Increment = 1,
-										Callback = function(player11, value3)
-											tbl20.RandomAccuracyMin = player11
-											tbl20.RandomAccuracyMax = value3
-										end,
-										OnCommit = onInputEnded,
-									})
-
-									angleRadians:AddDivider()
-
+									
 									tbl24.toggles.Auto_Preclick = angleRadians:AddToggle({
 										Name = "Auto Preclick",
 										SaveId = "Auto_Preclick",
@@ -19866,155 +20462,80 @@ end)
 
 									local track = entry:AddGroup({ Name = "Auto Spam", Side = "Right", Icon = "rbxassetid://10723427199" })
 
-									tbl24.toggles.Auto_Spam = track:AddToggle({
-										Name = "Auto Spam",
-										SaveId = "Auto_Spam",
-										Default = false,
-										Notify = true,
-										Callback = function(func)
-											tbl20.AutoSpamEnabled = func
+											tbl24.toggles.Auto_Spam = track:AddToggle({
+												Name = "Auto Spam",
+												SaveId = "Auto_Spam",
+												Default = false,
+												Notify = true,
+												Callback = function(func)
+													tbl20.AutoSpamEnabled = func
+													if larpBBState.Loaded then
+														tbl25.Loop.RefreshAutoSpam()
+													end
+												end,
+											})
 
-											if larpBBState.Loaded then
-												tbl25.Loop.RefreshAutoSpam()
-											end
-										end,
-									})
+											tbl24.dropdowns.Spam_Type = track:AddDropdown({
+												Name = "Spam Mode",
+												SaveId = "Auto_Spam_Type",
+												Options = { "Remote", "VIM", "Mouse Click" },
+												Default = "Remote",
+												Callback = operation("AutoSpamType", function(line)
+													heartbeatUpdate(nil, line, "spam mode")
+												end),
+											})
 
-									tbl24.toggles.AutoSpamAnimFix = track:AddToggle({
-										Name = "Animation Fix",
-										SaveId = "Auto_Spam_Anim_Fix",
-										Default = true,
-										Callback = operation("AutoSpamAnimFix"),
-									})
+											tbl24.sliders.Spam_Threshold = track:AddSlider({
+												Name = "Parry Threshold",
+												SaveId = "Auto_Spam_Threshold",
+												Min = 0.5,
+												Max = 4,
+												Default = 1.4,
+												Increment = 0.1,
+												Callback = function(value)
+													tbl20.AutoSpamThreshold = tonumber(value) or 1.4
+												end,
+											})
 
-									tbl24.dropdowns.Spam_Type = track:AddDropdown({
-										Name = "Spam Type",
-										SaveId = "Auto_Spam_Type",
-										Options = { "Remote", "VIM", "Mouse Click" },
-										Default = "Remote",
-										Callback = operation("AutoSpamType", function(line)
-											heartbeatUpdate(nil, line, "spam mode")
-										end),
-									})
+											tbl24.sliders.AutoSpamSensitivity = track:AddSlider({
+												Name = "Sensitivity Multiplier",
+												SaveId = "Auto_Spam_Sensitivity",
+												Min = 0.5,
+												Max = 2,
+												Default = 1.19,
+												Increment = 0.01,
+												Callback = function(value)
+												tbl20.AutoSpamSensitivity = tonumber(value) or 1.19
+												end,
+											})
 
-									tbl24.dropdowns.AutoSpamAnimFixType = track:AddDropdown({
-										Name = "Anim Fix Type",
-										SaveId = "Auto_Spam_Anim_Fix_Type",
-										Options = { "Animation + Click", "Animation", "Click" },
-										Default = "Animation",
-										Callback = operation("AutoSpamAnimFixType"),
-									})
+											tbl24.toggles.AutoSpamAnimFix = track:AddToggle({
+												Name = "Animation Fix",
+												SaveId = "Auto_Spam_Anim_Fix",
+												Default = true,
+												Callback = operation("AutoSpamAnimFix"),
+											})
 
-									track:AddDivider()
-									local ESX = nil
 
-									tbl24.toggles.Dynamic_Threshold = track:AddToggle({
-										Name = "Dynamic Threshold",
-										SaveId = "Dynamic_Spam_Threshold",
-										Default = false,
-										Callback = function(minimum)
-											tbl20.DynamicSpamThreshold = minimum
-
-											if ESX then
-												ESX(not minimum)
-											end
-										end,
-									})
-
-									tbl24.sliders.Spam_Threshold = track:AddSlider({
-										Name = "Threshold",
-										SaveId = "Auto_Spam_Threshold",
-										Min = stack[18],
-										Max = 4,
-										Default = stack[70],
-										Increment = stack[18],
-										Callback = function(line)
-											tbl20.AutoSpamThreshold = math.round(line)
-										end,
-									})
-
-									local progressBar = tbl24.sliders.Spam_Threshold
-									local targetX = progressBar.labelText.Position.Y.Offset
-									progressBar.backgroundFrame.ClipsDescendants = stack[200]
-									local difference = 0
-
-									local function vectorAdd(line, object, descendant)
-										if descendant > stack[33] then
-											v101(line, object, descendant, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-										else
-											for vertex, modelName in object, nil, nil do
-												line[vertex] = modelName
-											end
-										end
-									end
-
-									ESX = function(line, object)
-										difference += stack[18]
-										local vertexCount = difference
-										object = object and stack[33] or 0.34
-										local openError = line and 0 or 1
-										local step = line and targetX or targetX + 8
-
-										if line then
-											progressBar.labelText.Visible = true
-											progressBar.valueBox.Visible = stack[200]
-											progressBar.backgroundFrame.Visible = true
-										end
-
-										track.elementYPos = targetX + (line and 40 or stack[33])
-
-										if track.UpdateSize then
-											track.UpdateSize(object)
-										end
-
-										vectorAdd(progressBar.labelText, { Position = UDim2.new(0, 10, 0, step), TextTransparency = openError }, object)
-										vectorAdd(progressBar.valueBox, { Position = UDim2.new(stack[18], -95, 0, step), TextTransparency = openError }, object)
-
-										vectorAdd(progressBar.backgroundFrame, {
-											Position = UDim2.new(0, stack[115], 0, step + stack[185]),
-											Size = UDim2.new(0, progressBar.backgroundFrame.Size.X.Offset, 0, line and 5 or 0),
-											BackgroundTransparency = openError,
-										}, object)
-
-										vectorAdd(progressBar.fillFrame, { BackgroundTransparency = openError }, object)
-
-										task.delay(object, function()
-											local steering = line
-											local cell
-
-											if line then
-												cell = steering
-											else
-												cell = vertexCount ~= difference
-											end
-
-											if cell then
-												return
-											end
-											progressBar.labelText.Visible = false
-											progressBar.valueBox.Visible = false
-											progressBar.backgroundFrame.Visible = false
-										end)
-									end
-
-									ESX(not tbl20.DynamicSpamThreshold, stack[200])
-									local vertexCount = entry:AddGroup({ Name = "Manual Spam", Side = "Right", Icon = "rbxassetid://10723427199" })
+											local vertexCount = entry:AddGroup({ Name = "Manual Spam", Side = "Right", Icon = "rbxassetid://10723427199" })
 
 									tbl24.toggles.Manual_Spam = vertexCount:AddToggle({
 										Name = "Manual Spam",
 										SaveId = "Manual_Spam",
 										NoSave = stack[200],
 										Default = false,
-										Notify = stack[200],
-										Callback = tbl25.ManualSpam.SetEnabled,
-									})
+																	Notify = stack[200],
+																	Callback = tbl25.ManualSpam.SetEnabled,
+																})
 
-									tbl24.toggles.Manual_Spam_UI = vertexCount:AddToggle({
-										Name = "Manual UI (Mobile)",
-										SaveId = "Manual_Spam_UI",
-										Default = stack[101],
-										Callback = operation("ManualSpamUIEnabled", tbl25.ManualSpam.Refresh),
-									})
+																	if touchEnabled then
+																		tbl24.toggles.Manual_Spam_UI = vertexCount:AddToggle({
+																			Name = "Manual UI (Mobile)",
+																			SaveId = "Manual_Spam_UI",
+																			Default = stack[101],
+																			Callback = operation("ManualSpamUIEnabled", tbl25.ManualSpam.Refresh),
+																		})
+																	end
 
 									tbl24.toggles.ManualSpamAnimFix = vertexCount:AddToggle({
 										Name = "Manual Animation Fix",
@@ -20031,15 +20552,7 @@ end)
 										Callback = operation("ManualSpamType"),
 									})
 
-									tbl24.dropdowns.ManualSpamAnimFixType = vertexCount:AddDropdown({
-										Name = "Anim Fix Type",
-										SaveId = "Manual_Spam_Anim_Fix_Type",
-										Options = { "Animation + Click", "Animation", "Click" },
-										Default = "Animation",
-										Callback = operation("ManualSpamAnimFixType"),
-									})
-
-									local steering = entry:AddGroup({ Name = "Triggerbot", Side = "Right", Icon = "rbxassetid://10723427199" })
+									local steering = entry:AddGroup({ Name = "Triggerbot", Side = "Left", Icon = "rbxassetid://10723427199" })
 
 									tbl24.toggles.Triggerbot = steering:AddToggle({
 										Name = "Triggerbot",
@@ -20975,64 +21488,161 @@ end)
 								end
 
 								local function targetFunction()
-									tbl24.toggles.Ball_Stats = placeholder:AddGroup({ Name = "Ball Misc", Side = stack[150], Icon = "rbxassetid://10723427199" }):AddToggle({ Name = "Ball Stats", SaveId = "Ball_Stats", Default = false, Callback = tbl25.BallStats.Toggle })
-									local angleRadians = placeholder:AddGroup({ Name = "Avatar", Side = "Right", Icon = "rbxassetid://10723427199" })
+									local moneySpooferGroup = placeholder:AddGroup({ Name = "Money Spoofer", Side = "Left", Icon = "rbxassetid://10723427199" })
+									local moneySpooferEntries = {}
+									local moneySpooferDisplay = nil
+									local moneySpooferGeneration = 0
 
-									tbl24.toggles.Avatar_Changer = angleRadians:AddToggle({
-										Name = "Avatar Changer",
-										SaveId = "Avatar",
-										Default = false,
-										Callback = function(context)
-											tbl20.AvatarEnabled = context
+									local function restoreMoneySpoofer()
+									    moneySpooferGeneration += 1
+									    for label, entry in pairs(moneySpooferEntries) do
+									        if entry.Connection then
+									            entry.Connection:Disconnect()
+									        end
+									        if label and label.Parent and entry.Original ~= nil then
+									            pcall(function()
+									                label.Text = entry.Original
+									            end)
+									        end
+									    end
+									    table.clear(moneySpooferEntries)
+									    moneySpooferDisplay = nil
+									end
+									larpBBState.MoneySpooferRestore = restoreMoneySpoofer
 
-											if larpBBState.Loaded then
-												tbl23.Toggle(context)
-											end
-										end,
-									})
+									local function findMoneyLabels()
+									    local playerGui = localPlayer:FindFirstChildOfClass("PlayerGui")
+									    if not playerGui then
+									        return {}
+									    end
 
-									tbl24.toggles.Avatar_Korblox_Headless = angleRadians:AddToggle({
-										Name = "Korblox/Headless",
-										SaveId = "KH",
-										Default = false,
-										Callback = function(actionName)
-											tbl20.KHEnabled = actionName
+									    local function followPath(root, names)
+									        for _, name in ipairs(names) do
+									            root = root and root:FindFirstChild(name)
+									            if not root then
+									                return nil
+									            end
+									        end
+									        return root
+									    end
 
-											if larpBBState.Loaded then
-												tbl23.ToggleKH(actionName)
-											end
-										end,
-									})
+									    local function isVisible(label)
+									        local node = label
+									        while node and node ~= playerGui do
+									            if node:IsA("GuiObject") and not node.Visible then
+									                return false
+									            end
+									            if node:IsA("ScreenGui") and not node.Enabled then
+									                return false
+									            end
+									            node = node.Parent
+									        end
+									        return true
+									    end
 
-									tbl24.textboxes.Avatar_Changer_Input = angleRadians:AddTextbox({
-										Name = "Avatar User/ID",
-										SaveId = "Avatar_User",
-										Placeholder = "user/userid",
-										Callback = function(height)
-											tbl20.AvatarUser = height
+									    local desktop = followPath(playerGui, { "HUD", "LeftFrame", "Top", "MoneyFrame", "MoneyLabel" })
+									    local mobile = followPath(playerGui, { "mobileRefs", "Frame", "MoneyLabel" })
+									    local candidates = {}
+									    if desktop and desktop:IsA("TextLabel") then
+									        table.insert(candidates, desktop)
+									    end
+									    if mobile and mobile:IsA("TextLabel") and mobile ~= desktop then
+									        table.insert(candidates, mobile)
+									    end
 
-											if larpBBState.Loaded and tbl20.AvatarEnabled then
-												task.spawn(tbl23.Apply)
-											end
-										end,
-									})
+									    local visible = {}
+									    for _, label in ipairs(candidates) do
+									        if isVisible(label) then
+									            table.insert(visible, label)
+									        end
+									    end
+									    return #visible > 0 and visible or candidates
+									end
 
-									tbl24.toggles.Unlock_All = placeholder:AddGroup({ Name = "Inventory", Side = "Right", Icon = "rbxassetid://10723427199" }):AddToggle({
-										Name = "Unlock All (Client)",
-										SaveId = "Unlock_All",
-										Default = false,
-										Callback = function(player28)
-											tbl20.UnlockAllEnabled = player28
-											if not larpBBState.Loaded then
+									local function bindMoneyLabel(label)
+									    local entry = moneySpooferEntries[label]
+									    if not entry then
+									        entry = { Original = label.Text, Writing = false }
+									        moneySpooferEntries[label] = entry
+									        entry.Connection = label:GetPropertyChangedSignal("Text"):Connect(function()
+									            if entry.Writing or not moneySpooferDisplay or not label.Parent then
+									                return
+									            end
+									            if label.Text == moneySpooferDisplay then
+									                return
+									            end
+									            entry.Original = label.Text
+									            entry.Writing = true
+									            label.Text = moneySpooferDisplay
+									            entry.Writing = false
+									        end)
+									    end
+									    entry.Writing = true
+									    label.Text = moneySpooferDisplay
+									    entry.Writing = false
+									end
+
+									local function updateMoneySpoofer(value)
+									    local raw = tostring(value or ""):gsub("[%s,]", "")
+									    if raw == "" then
+									        restoreMoneySpoofer()
+									        return
+									    end
+
+											local amount = tonumber(raw)
+											if not amount or amount ~= amount or amount == math.huge or amount < 0 or amount > 999999999999999 then
 												return
 											end
-											tbl25.UnlockAll.Toggle(player28)
-										end,
+
+									    local formatted = string.format("%.0f", math.floor(amount))
+									    while true do
+									        local grouped, count = formatted:gsub("^(%d+)(%d%d%d)", "%1,%2")
+									        if count == 0 then
+									            break
+									        end
+									        formatted = grouped
+									    end
+
+									    moneySpooferDisplay = formatted
+									    moneySpooferGeneration += 1
+									    local generation = moneySpooferGeneration
+									    local labels = findMoneyLabels()
+									    if #labels > 0 then
+									        for _, label in ipairs(labels) do
+									            bindMoneyLabel(label)
+									        end
+									        return
+									    end
+
+									    task.spawn(function()
+									        for _ = 1, 20 do
+									            task.wait(0.5)
+									            if generation ~= moneySpooferGeneration then
+									                return
+									            end
+									            labels = findMoneyLabels()
+									            if #labels > 0 then
+									                for _, label in ipairs(labels) do
+									                    bindMoneyLabel(label)
+									                end
+									                return
+									            end
+											end
+											if generation == moneySpooferGeneration then
+											end
+									    end)
+									end
+
+									tbl24.textboxes.MoneySpoofer = moneySpooferGroup:AddTextbox({
+									    Name = "Displayed Amount",
+									    SaveId = "Money_Spoofer_Local",
+									    Default = "",
+									    Placeholder = "Only changes your screen",
+									    Callback = updateMoneySpoofer,
 									})
+									local winStreakSpooferGroup = placeholder:AddGroup({ Name = "Spoofer Win Streak", Side = "Left", Icon = "rbxassetid://10723427199" })
 
-									local track = placeholder:AddGroup({ Name = stack[105], Side = "Right", Icon = "rbxassetid://10723427199" })
-
-									tbl24.toggles.CustomStreak = track:AddToggle({
+									tbl24.toggles.CustomStreak = winStreakSpooferGroup:AddToggle({
 										Name = "Custom Streak",
 										SaveId = "Custom_Streak",
 										Default = false,
@@ -21045,7 +21655,7 @@ end)
 										end,
 									})
 
-									tbl24.textboxes.CustomStreak = track:AddTextbox({
+									tbl24.textboxes.CustomStreak = winStreakSpooferGroup:AddTextbox({
 										Name = "Streak",
 										SaveId = "Streak",
 										Placeholder = "Streak Here",
@@ -21055,6 +21665,72 @@ end)
 											if larpBBState.Loaded and tbl20.CustomStreakEnabled then
 												tbl25.Streak.Toggle(true)
 											end
+										end,
+									})
+
+									tbl24.toggles.Ball_Stats = placeholder:AddGroup({ Name = "Ball Misc", Side = "Left", Icon = "" }):AddToggle({ Name = "Ball Stats", SaveId = "Ball_Stats", Default = false, Callback = tbl25.BallStats.Toggle })
+									local avatarChangerGroup = avatarTab:AddGroup({ Name = "Avatar Changer", Side = "Left", Icon = "rbxassetid://135756197673563" })
+
+											tbl24.toggles.Avatar_Changer = avatarChangerGroup:AddToggle({
+												Name = "Avatar Changer",
+												SaveId = "Avatar",
+												Default = false,
+												Callback = function(context)
+													tbl20.AvatarEnabled = context
+													if larpBBState.Loaded then
+														tbl23.Toggle(context)
+													end
+												end,
+											})
+
+											tbl24.textboxes.Avatar_Changer_Input = avatarChangerGroup:AddTextbox({
+												Name = "Avatar User/ID",
+												SaveId = "Avatar_User",
+												Placeholder = "user/userid",
+												Callback = function(height)
+												tbl20.AvatarUser = height
+													if larpBBState.Loaded and tbl20.AvatarEnabled then
+														task.spawn(tbl23.Apply)
+													end
+												end,
+											})
+
+											local korbloxGroup = avatarTab:AddGroup({ Name = "Korblox", Side = "Right", Icon = "rbxassetid://10723427199" })
+										tbl24.toggles.Korblox = korbloxGroup:AddToggle({
+												Name = "Korblox",
+												SaveId = "Korblox",
+												Default = false,
+												Callback = function(enabled)
+													tbl20.KorbloxEnabled = enabled
+													if larpBBState.Loaded then
+														tbl23.ToggleKH()
+													end
+												end,
+											})
+
+											local headlessGroup = avatarTab:AddGroup({ Name = "Headless", Side = "Right", Icon = "rbxassetid://10723427199" })
+										tbl24.toggles.Headless = headlessGroup:AddToggle({
+												Name = "Headless",
+												SaveId = "Headless",
+												Default = false,
+												Callback = function(enabled)
+													tbl20.HeadlessEnabled = enabled
+													if larpBBState.Loaded then
+														tbl23.ToggleKH()
+													end
+												end,
+											})
+
+											tbl24.toggles.Unlock_All = placeholder:AddGroup({ Name = "Unlock All", Side = "Right", Icon = "rbxassetid://10723427199" }):AddToggle({
+										Name = "Unlock All",
+										SaveId = "Unlock_All",
+										Default = false,
+										Callback = function(player28)
+											tbl20.UnlockAllEnabled = player28
+											if not larpBBState.Loaded then
+												return
+											end
+											tbl25.UnlockAll.Toggle(player28)
 										end,
 									})
 
@@ -21078,20 +21754,7 @@ end)
 										})
 									end
 
-									tbl24.toggles.AutoRejoinExecute = placeholder:AddGroup({ Name = "Script", Side = "Right", Icon = "rbxassetid://10723427199" }):AddToggle({
-										Name = "Auto Rejoin & Execute",
-										SaveId = "Auto_Rejoin_Execute",
-										Default = false,
-										Callback = function(args)
-											tbl20.AutoRejoinExecute = args
-
-											if larpBBState.Loaded then
-												tbl25.Script.Toggle(args)
-											end
-										end,
-									})
-
-									local steering = placeholder:AddGroup({ Name = "Staff", Side = stack[150], Icon = "rbxassetid://10723427199" })
+									local steering = placeholder:AddGroup({ Name = "Staff", Side = "Right", Icon = "rbxassetid://10723427199" })
 
 									tbl24.toggles.StaffDetection = steering:AddToggle({
 										Name = "Staff Detection",
@@ -21128,7 +21791,7 @@ end)
 									})
 
 									major:AddButton({ Name = "Apply", Callback = tbl25.DeviceSpoof.Apply })
-									local byte = placeholder:AddGroup({ Name = stack[2], Side = "Left", Icon = "rbxassetid://10723427199" })
+									local byte = placeholder:AddGroup({ Name = "Ability", Side = "Right", Icon = "rbxassetid://10723427199" })
 
 									tbl24.toggles.Ability_ESP = byte:AddToggle({
 										Name = "Ability ESP",
@@ -21154,6 +21817,19 @@ end)
 											if larpBBState.Loaded then
 												tbl25.Visuals.Toggle()
 												tbl25.Visuals.RefreshLoop()
+											end
+										end,
+									})
+
+									tbl24.toggles.AbilityESPMatchOnly = byte:AddToggle({
+										Name = "Only Match Players",
+										SaveId = "Ability_ESP_Match_Only",
+										Default = false,
+										Callback = function(value)
+											tbl20.AbilityESPMatchOnly = value and true or false
+
+											if larpBBState.Loaded then
+												tbl25.Visuals.RefreshESP()
 											end
 										end,
 									})
@@ -21190,28 +21866,10 @@ end)
 										end,
 									})
 
-									local result68 = placeholder:AddGroup({ Name = "Rewards", Side = "Left", Icon = "rbxassetid://10723427199" })
-
-									for _, childNode in tbl25.Rewards.Items, nil, nil do
-										tbl24.toggles[childNode.ID] = result68:AddToggle({
-											Name = childNode.Name,
-											SaveId = childNode.ID,
-											Default = false,
-											Notify = childNode.Notify,
-											Callback = function(line)
-												tbl20[childNode.ID] = line
-
-												if larpBBState.Loaded then
-													tbl25.Rewards.Toggle()
-												end
-											end,
-										})
-									end
-
-									local net = placeholder:AddGroup({ Name = "Automation", Side = "Left", Icon = "rbxassetid://10723427199" })
+									local net = placeholder:AddGroup({ Name = "Automation", Side = "Right", Icon = "rbxassetid://10723427199" })
 
 									tbl24.toggles.Auto_Play = net:AddToggle({
-										Name = "Auto Play",
+										Name = "Auto play",
 										SaveId = "Auto_Play",
 										Default = false,
 										Callback = function(inputString)
@@ -21222,21 +21880,6 @@ end)
 											end
 										end,
 									})
-
-									tbl24.toggles.AutoVoteMap = net:AddToggle({
-										Name = "Auto Vote Map",
-										SaveId = "Auto_Vote_Map",
-										Default = false,
-										Callback = function(original)
-											tbl20.AutoVoteMap = original
-
-											if not original then
-												table.clear(tbl25.AutoPlay.Voting)
-											end
-										end,
-									})
-
-									tbl24.toggles.HitFreeze = net:AddToggle({ Name = "Hit Freeze", SaveId = "Hit_Freeze", Default = false, Callback = operation("HitFreeze") })
 
 									tbl24.toggles.SpamJump = net:AddToggle({
 										Name = "Spam Jump",
@@ -21249,26 +21892,6 @@ end)
 												tbl25.AutoPlay.Jump(false)
 											end
 										end,
-									})
-
-									tbl24.sliders.AutoPlaySmoothness = net:AddSlider({
-										Name = "Smoothness",
-										SaveId = "Auto_Play_Smoothness",
-										Min = 1,
-										Max = 100,
-										Default = stack[169],
-										Increment = stack[18],
-										Callback = operation("AutoPlaySmoothness"),
-									})
-
-									tbl24.sliders.AutoPlayAggressiveness = net:AddSlider({
-										Name = "Aggressiveness",
-										SaveId = "Auto_Play_Aggressiveness",
-										Min = 1,
-										Max = 100,
-										Default = stack[195],
-										Increment = 1,
-										Callback = operation("AutoPlayAggressiveness"),
 									})
 
 									tbl24.toggles.AntiAFK = net:AddToggle({
@@ -21287,214 +21910,41 @@ end)
 									tbl24.dropdowns.AutoPlayMode = net:AddDropdown({
 										Name = "Mode",
 										SaveId = "Auto_Play_Mode",
-										Options = { "Play Edge", "Play Middle", "Mix" },
-										Default = "Play Edge",
+										Options = { "Edge", "Middle", "Mix" },
+										Default = "Edge",
 										Callback = operation("AutoPlayMode"),
 									})
 								end
 
 								local function cleanup()
-									local angleRadians = entity:AddGroup({ Name = "Menu", Side = "Left", Icon = "rbxassetid://10723427199" })
-
-									tbl24.sliders.MenuScale = angleRadians:AddSlider({
-										Name = "Menu Scale",
-										SaveId = "Menu_Scale",
-										Min = stack[169],
-										Max = 150,
-										Default = stack[158],
-										Increment = 1,
-										Callback = function(numberString)
-											tbl20.MenuScale = math.clamp(tonumber(numberString) or 100, 50, 150)
-
-											if v103 then
-												v103:UpdateLayoutScale()
-											end
-										end,
-									})
-
+									local mobileGroup = nil
 									if touchEnabled then
-										tbl24.sliders.MobileButtonScale = angleRadians:AddSlider({
-											Name = "Mobile Button Scale",
-											SaveId = "Mobile_Button_Scale",
-											Min = 50,
-											Max = 150,
-											Default = stack[158],
-											Increment = stack[18],
-											Callback = function(denominator)
-												tbl20.MobileButtonScale = denominator
-
-												if v103 and v103.mobileToggleScale then
-													tweenInstance(v103.mobileToggleScale, { Scale = denominator / 100 }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-												end
-											end,
-										})
+									    mobileGroup = entity:AddGroup({ Name = "Mobile", Side = "Left", Icon = "rbxassetid://10723427199" })
+									    tbl24.sliders.MobileButtonScale = mobileGroup:AddSlider({
+									        Name = "Mobile Button Scale",
+									        SaveId = "Mobile_Button_Scale",
+									        Min = 50,
+									        Max = 150,
+									        Default = stack[158],
+									        Increment = stack[18],
+									        Callback = function(denominator)
+									            tbl20.MobileButtonScale = denominator
+									            if v103 and v103.mobileToggleScale then
+									                tweenInstance(v103.mobileToggleScale, { Scale = denominator / 100 }, 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+									            end
+									        end,
+									    })
 									end
 
-									tbl24.toggles.Minimize_Keybind = angleRadians:AddKeybind({
-										Name = "UI Toggle Keybind",
-										SaveId = "Menu_Toggle_Keybind",
-										Default = Enum.KeyCode.RightAlt,
-										ChangedCallback = function(player24)
-											if v103 then
-												v103.toggleVisibilityKey = player24
-												v103.toggleVisibilityKeyName = player24 == Enum.KeyCode.Unknown and "None" or player24.Name
-												v103.lastKeybindChanged = tick()
-											end
-										end,
+									local uiToggleGroup = entity:AddGroup({ Name = "UI Controls", Side = "Left", Icon = "rbxassetid://10723427199" })
+									uiToggleGroup:AddButton({
+									    Name = "Alternar Interface",
+									    Callback = function()
+									        if v103 and v103.SetVisible then
+									            v103:SetVisible(not v103.isToggledOn)
+									        end
+									    end,
 									})
-
-									local track = entity:AddGroup({ Name = "Configs", Side = "Left", Icon = "rbxassetid://10723427199" })
-
-									tbl24.textboxes.ConfigName = track:AddTextbox({
-										Name = "Config Name",
-										SaveId = "ConfigName",
-										Default = "",
-										NoSave = true,
-										Callback = function()
-										end,
-									})
-
-									local nearestIndex = nil
-
-									tbl24.dropdowns.Config_List = track:AddDropdown({
-										Name = "Config List",
-										SaveId = "Config_List",
-										Options = Configs:Refresh(),
-										Default = "none",
-										NoSave = true,
-										OnOpen = function()
-											if nearestIndex then
-												nearestIndex()
-											end
-										end,
-										Callback = function(line)
-											Configs.Selected = line ~= "none" and line or nil
-										end,
-									})
-
-									nearestIndex = function()
-										local lines = Configs:Refresh()
-
-										if #lines == 0 then
-											lines = { "none" }
-										end
-
-										tbl24.dropdowns.Config_List:Refresh(lines)
-
-										if Configs.Selected and table.find(lines, Configs.Selected) then
-											tbl24.dropdowns.Config_List:Set(Configs.Selected)
-										else
-											tbl24.dropdowns.Config_List:Set(lines[stack[18]])
-										end
-									end
-
-									nearestIndex()
-									local difference = (tonumber(track.elementYPos) or tonumber(track.mainFrame.AbsoluteSize.Y) or 0) + 2
-
-									local function generateRandomString(line, object, descendant)
-										v103:Notify({ Title = line and object or "config failed: " .. tostring(descendant), Duration = 3 })
-									end
-
-									local function onHumanoidDied(line, object, descendant, radius)
-										local openError = 113
-										local step = 25
-										local mathMax = object == 1 and 10 or 135
-										local leftChild = difference + ((tonumber(descendant) or 1) - 1) * 31
-
-										local button = v98("TextButton", {
-											Name = line:gsub("%s+", "_"),
-											AutoButtonColor = stack[101],
-											BackgroundColor3 = track.Library.config.Colors.Element,
-											BorderSizePixel = 0,
-											FontFace = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-											Text = line,
-											TextColor3 = track.Library.config.Colors.SubText,
-											TextSize = 13,
-											Position = UDim2.new(0, mathMax, stack[33], leftChild),
-											Size = UDim2.new(stack[33], 113, 0, 25),
-											Parent = track.mainFrame,
-										})
-
-										v98("UICorner", { CornerRadius = UDim.new(stack[33], stack[72]), Parent = button })
-										local vertexCount = v98(stack[131], { Color = track.Library.config.Colors.BorderSoft, Parent = button })
-
-										button.MouseEnter:Connect(function()
-											v101(button, {
-												BackgroundColor3 = track.Library.config.Colors.ElementHover,
-												TextColor3 = track.Library.config.Colors.Text,
-											}, stack[136])
-
-											v101(vertexCount, { Color = track.Library.config.Colors.Border }, 0.18)
-										end)
-
-										button.MouseLeave:Connect(function()
-											v101(button, {
-												BackgroundColor3 = track.Library.config.Colors.Element,
-												TextColor3 = track.Library.config.Colors.SubText,
-											}, 0.22)
-
-											v101(vertexCount, { Color = track.Library.config.Colors.BorderSoft }, 0.22)
-										end)
-
-										button.MouseButton1Down:Connect(function()
-											v101(button, {
-												Size = UDim2.new(stack[33], openError - 5, 0, step - 2),
-												Position = UDim2.new(0, mathMax + 2, stack[33], leftChild + 1),
-											}, 0.08, Enum.EasingStyle.Quad)
-										end)
-
-										button.MouseButton1Up:Connect(function()
-											v101(button, { Size = UDim2.new(stack[33], 113, 0, 25), Position = UDim2.new(0, mathMax, 0, leftChild) }, 0.22, Enum.EasingStyle.Back)
-											radius()
-										end)
-									end
-
-									local function subtractVectors(line, object, descendant)
-										return function()
-											local playerUserId = Configs.Selected
-											local vertexCount, steering = Configs[line](Configs, playerUserId)
-											generateRandomString(vertexCount, object .. tostring(playerUserId), steering)
-
-											if descendant then
-												nearestIndex()
-											end
-										end
-									end
-
-									onHumanoidDied("Create", stack[18], stack[18], function()
-										local query = tbl24.textboxes.ConfigName and tbl24.textboxes.ConfigName.value or ""
-										local vertexCount, steering = Configs:Save(query)
-										generateRandomString(vertexCount, "created config " .. tostring(Configs.Name(query) or query), steering)
-										nearestIndex()
-									end)
-
-									local currentTime = subtractVectors("Load", "loaded config ")
-									onHumanoidDied("Load", 2, 1, currentTime)
-									local startTime = subtractVectors("Save", "overwrote config ", true)
-									onHumanoidDied("Overwrite", 1, 2, startTime)
-									local deltaTime = subtractVectors("Reset", "reset config ", true)
-									onHumanoidDied("Reset Config", 2, 2, deltaTime)
-									local errorMessage = subtractVectors("Delete", "deleted config ", true)
-									onHumanoidDied("Delete", 1, 3, errorMessage)
-									local playerPed = subtractVectors("SetAutoload", "autoload set to ")
-									onHumanoidDied("Autoload", 2, 3, playerPed)
-
-									onHumanoidDied("Reset Autoload", 1, stack[153], function()
-										Configs:ClearAutoload()
-										v103:Notify({ Title = "autoload reset", Duration = 3 })
-									end)
-
-									onHumanoidDied("Reset Settings", 2, stack[153], function()
-										Configs.Apply(Configs.Defaults())
-										v103:Notify({ Title = "settings reset to default", Duration = stack[61] })
-									end)
-
-									track.elementYPos = difference + 124
-
-									if track.UpdateSize then
-										track.UpdateSize()
-									end
-
 -- ===== LARP THEMES =====
 local larpThemes = {
 Crimson = {
@@ -21528,6 +21978,14 @@ Border = Color3.fromRGB(46, 37, 66), BorderSoft = Color3.fromRGB(34, 27, 49),
 Accent = Color3.fromRGB(150, 90, 255), AccentDark = Color3.fromRGB(110, 60, 200), AccentLight = Color3.fromRGB(200, 160, 255),
 Text = Color3.fromRGB(240, 234, 250), SubText = Color3.fromRGB(150, 140, 168), TextHover = Color3.fromRGB(255, 255, 255),
 Muted = Color3.fromRGB(98, 88, 118), Alt1 = Color3.fromRGB(19, 14, 28), Alt2 = Color3.fromRGB(9, 7, 14),
+},
+Dark = {
+Primary = Color3.fromRGB(0, 0, 0), Secondary = Color3.fromRGB(3, 3, 3), Tertiary = Color3.fromRGB(6, 6, 6),
+Surface = Color3.fromRGB(9, 9, 9), Element = Color3.fromRGB(13, 13, 13), ElementHover = Color3.fromRGB(22, 22, 22),
+Border = Color3.fromRGB(30, 30, 30), BorderSoft = Color3.fromRGB(18, 18, 18),
+Accent = Color3.fromRGB(38, 38, 42), AccentDark = Color3.fromRGB(24, 24, 27), AccentLight = Color3.fromRGB(70, 70, 78),
+Text = Color3.fromRGB(245, 245, 245), SubText = Color3.fromRGB(165, 165, 165), TextHover = Color3.fromRGB(255, 255, 255),
+Muted = Color3.fromRGB(110, 110, 110), Alt1 = Color3.fromRGB(5, 5, 5), Alt2 = Color3.fromRGB(1, 1, 1),
 },
 }
 
@@ -21634,14 +22092,7 @@ sweep()
 
 
 if v103.hubNameLabel then
-local accent = target.Accent
-v103.hubNameLabel.Text = string.format(
-"<font color=\"rgb(%d,%d,%d)\">$</font> %s",
-math.floor(accent.R * 255 + 0.5),
-math.floor(accent.G * 255 + 0.5),
-math.floor(accent.B * 255 + 0.5),
-tostring(v103.config.Name or "Larp")
-)
+v103.hubNameLabel.Text = tostring(v103.config.Name or "Larp")
 end
 
 v103:Notify({ Title = "Theme: " .. themeName, Duration = 2 })
@@ -21667,7 +22118,7 @@ local themeGroup = entity:AddGroup({ Name = "Themes", Side = "Right", Icon = "rb
 tbl24.dropdowns.Menu_Theme = themeGroup:AddDropdown({
 Name = "Theme",
 SaveId = "Menu_Theme",
-Options = { "Crimson", "Midnight", "Emerald", "Amethyst" },
+Options = { "Crimson", "Midnight", "Emerald", "Amethyst", "Dark" },
 Default = "Crimson",
 Callback = function(selectedTheme)
 if type(selectedTheme) == "table" then
@@ -21684,40 +22135,207 @@ themeGroup.UpdateSize()
 end
 -- ===== END LARP THEMES =====
 
--- ===== LARP WATERMARK SETTINGS =====
-local watermarkGroup = entity:AddGroup({ Name = "Watermark", Side = "Right", Icon = "rbxassetid://10723427199" })
+-- ===== LARP CUSTOM BACKGROUND =====
+local customBackgroundGroup = entity:AddGroup({ Name = "Custom Background", Side = "Left", Icon = "rbxassetid://10723427199" })
 
-local function addWatermarkToggle(label, saveId, key, defaultValue)
-tbl24.toggles[saveId] = watermarkGroup:AddToggle({
-Name = label,
-SaveId = saveId,
-Default = defaultValue,
-Callback = function(value)
-v103.watermarkSettings[key] = value and true or false
-v103:RefreshWatermark()
-end,
+local customBackgroundDividerOriginals = {}
+local customBackgroundDividerNames = { "TitleDivider", "ContentDivider" }
+
+local function setCustomBackgroundDividersDimmed(dimmed)
+    local imageLabel = v103 and v103.customBackgroundImage
+    local mainFrame = imageLabel and imageLabel.Parent
+    if not mainFrame then
+        return
+    end
+
+    for _, dividerName in ipairs(customBackgroundDividerNames) do
+        local divider = mainFrame:FindFirstChild(dividerName, true)
+        if divider and divider:IsA("GuiObject") then
+            if dimmed then
+                if customBackgroundDividerOriginals[divider] == nil then
+                    customBackgroundDividerOriginals[divider] = divider.BackgroundTransparency
+                end
+                divider.BackgroundTransparency = 1
+            else
+                local original = customBackgroundDividerOriginals[divider]
+                if original ~= nil then
+                    pcall(function()
+                        divider.BackgroundTransparency = original
+                    end)
+                    customBackgroundDividerOriginals[divider] = nil
+                end
+            end
+        end
+    end
+end
+
+
+local customBackgroundActivePath
+local function cleanupCustomBackgroundFiles(keepPath)
+    if type(listfiles) ~= "function" or type(delfile) ~= "function" then
+        return
+    end
+    local ok, files = pcall(listfiles, "Larp")
+    if not ok or type(files) ~= "table" then
+        return
+    end
+    for _, filePath in ipairs(files) do
+        if type(filePath) == "string" and filePath:match("CustomBackground_%d+%.") and filePath ~= keepPath then
+            pcall(delfile, filePath)
+        end
+    end
+end
+
+local function applyCustomBackground(value)
+local imageLabel = v103 and v103.customBackgroundImage
+if not imageLabel or not imageLabel.Parent then
+return
+end
+
+local imageValue = tostring(value or ""):match("^%s*(.-)%s*$")
+if imageValue == "" then
+v103.customBackgroundGeneration = (v103.customBackgroundGeneration or 0) + 1
+imageLabel.Image = ""
+imageLabel.Visible = false
+customBackgroundActivePath = nil
+cleanupCustomBackgroundFiles(nil)
+setCustomBackgroundDividersDimmed(false)
+return
+end
+
+local assetId = imageValue:match("^(%d+)$") or imageValue:match("[?&]id=(%d+)") or imageValue:match("/store/asset/(%d+)") or imageValue:match("/asset/(%d+)")
+if assetId then
+imageValue = "rbxassetid://" .. assetId
+end
+
+if not imageValue:match("^rbxassetid://%d+$") and not imageValue:match("^https?://") then
+v103:Notify({ Title = "Paste a Roblox image ID or a valid HTTP(S) link.", Duration = 4 })
+return
+end
+
+v103.customBackgroundGeneration = (v103.customBackgroundGeneration or 0) + 1
+local generation = v103.customBackgroundGeneration
+
+if imageValue:match("^rbxassetid://%d+$") then
+local ok = pcall(function()
+imageLabel.Image = imageValue
+imageLabel.Visible = true
+setCustomBackgroundDividersDimmed(true)
+end)
+if not ok then
+imageLabel.Visible = false
+setCustomBackgroundDividersDimmed(false)
+v103:Notify({ Title = "Could not apply this image.", Duration = 4 })
+end
+return
+end
+
+-- Links externos são baixados para um asset local quando o executor oferece suporte.
+task.spawn(function()
+local imagePath
+local ok, localAsset = pcall(function()
+local assetLoader = getcustomasset or getsynasset
+if type(assetLoader) ~= "function" then
+error("custom asset loading is unavailable")
+end
+
+local requestFunction = (syn and syn.request) or http_request or request
+local responseBody
+local response
+if type(requestFunction) == "function" then
+response = requestFunction({ Url = imageValue, Method = "GET" })
+if type(response) == "table" then
+if response.Success == false or (tonumber(response.StatusCode) and tonumber(response.StatusCode) >= 400) then
+error("image URL request failed")
+end
+responseBody = response.Body
+end
+else
+responseBody = game:HttpGet(imageValue)
+end
+
+if type(responseBody) ~= "string" or #responseBody == 0 then
+error("empty image response")
+end
+if #responseBody > 12 * 1024 * 1024 then
+error("image is larger than 12 MB")
+end
+
+local extension = imageValue:match("%.([%w]+)[?#]") or imageValue:match("%.([%w]+)$")
+local headers = type(response) == "table" and (response.Headers or response.headers) or nil
+local contentType = type(headers) == "table" and (headers["Content-Type"] or headers["content-type"]) or ""
+contentType = tostring(contentType):lower()
+if not extension then
+if contentType:find("image/gif", 1, true) then
+extension = "gif"
+elseif contentType:find("image/jpeg", 1, true) then
+extension = "jpg"
+else
+extension = "png"
+end
+end
+extension = extension:lower()
+if extension ~= "png" and extension ~= "jpg" and extension ~= "jpeg" and extension ~= "gif" then
+extension = "png"
+end
+
+if not isfolder("Larp") then
+makefolder("Larp")
+end
+if not v103 or v103.customBackgroundGeneration ~= generation then
+    error("custom background request superseded")
+end
+imagePath = ("Larp/CustomBackground_%d.%s"):format(generation, extension)
+writefile(imagePath, responseBody)
+return assetLoader(imagePath)
+end)
+
+if not imageLabel.Parent or not v103 or v103.customBackgroundGeneration ~= generation then
+return
+end
+
+if ok and type(localAsset) == "string" then
+imageLabel.Image = localAsset
+imageLabel.Visible = true
+customBackgroundActivePath = imagePath
+cleanupCustomBackgroundFiles(imagePath)
+setCustomBackgroundDividersDimmed(true)
+else
+local directOk = pcall(function()
+imageLabel.Image = imageValue
+imageLabel.Visible = true
+setCustomBackgroundDividersDimmed(true)
+end)
+if not directOk then
+imageLabel.Visible = false
+setCustomBackgroundDividersDimmed(false)
+v103:Notify({ Title = "Could not load the link. Try a Roblox image asset ID.", Duration = 4 })
+end
+end
+end)
+end
+
+tbl24.textboxes.CustomBackground = customBackgroundGroup:AddTextbox({
+Name = "Image / GIF URL",
+SaveId = "Custom_Background",
+Default = "",
+Placeholder = "Paste an image ID or URL",
+Callback = applyCustomBackground,
 })
-end
 
-addWatermarkToggle("Show Watermark", "Watermark_Enabled", "Enabled", true)
-addWatermarkToggle("Show Name", "Watermark_Name", "Name", true)
-addWatermarkToggle("Show Time", "Watermark_Time", "Time", true)
-addWatermarkToggle("Show FPS", "Watermark_FPS", "FPS", true)
-addWatermarkToggle("Show MS", "Watermark_Ping", "Ping", true)
-addWatermarkToggle("Always Visible", "Watermark_KeepVisible", "KeepVisible", false)
-
-if watermarkGroup.UpdateSize then
-watermarkGroup.UpdateSize()
+if customBackgroundGroup.UpdateSize then
+customBackgroundGroup.UpdateSize()
 end
--- ===== END LARP WATERMARK SETTINGS =====
+-- ===== END LARP CUSTOM BACKGROUND =====
+
 
 -- ===== LARP MOBILE MODE =====
 local mobileModeEnabled = false
 local mobileUIS = game:GetService("UserInputService")
 local mobileTextService = game:GetService("TextService")
 local mobileEntries = {}
-local mobileFont = tbl22.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-local mobileExcluded = { Keybind_List = true, Minimize_Keybind = true }
+local mobileFont = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+local mobileExcluded = { Keybind_List = true }
 local mobileCurveOptionIcons = {}
 local mobileCurveOptionWatcher = nil
 
@@ -22069,7 +22687,6 @@ end
 local function scanMobileEntries()
 for key, object in pairs(tbl24.toggles) do
 if not mobileExcluded[key]
-and not string.find(key, "^Watermark_")
 and type(object) == "table"
 and object.labelText
 and object.labelText.Name == "ToggleLabel"
@@ -22145,14 +22762,123 @@ mobileGroup.UpdateSize()
 end
 -- ===== END LARP MOBILE MODE =====
 
-									tbl24.toggles.Keybind_List = entity:AddGroup({ Name = "UI Extras", Side = "Right", Icon = "rbxassetid://10723427199" }):AddToggle({
+										tbl24.toggles.Keybind_List = entity:AddGroup({ Name = "UI Extras", Side = "Right", Icon = "rbxassetid://10723427199" }):AddToggle({
 										Name = "Keybind List",
 										SaveId = stack[103],
 										Default = false,
 										Callback = tbl25.UIExtra.ToggleKeybindList,
 									})
-								end
 
+									local overlaysGroup = entity:AddGroup({ Name = "Overlays", Side = "Right", Icon = "rbxassetid://10723427199" })
+										local overlayPingEnabled, overlayFPSEnabled = false, false
+										local overlayGui, pingCard, fpsCard, pingLabel, fpsLabel, overlayConnection
+
+										local function destroyCard(card)
+											if card then card:Destroy() end
+										end
+
+										local function removeMetricOverlay()
+											if overlayConnection then overlayConnection:Disconnect(); overlayConnection = nil end
+											if overlayGui then overlayGui:Destroy(); overlayGui = nil end
+											pingCard, fpsCard, pingLabel, fpsLabel = nil, nil, nil, nil
+											larpBBState.CustomOverlayGui = nil
+										end
+										larpBBState.CustomOverlayCleanup = removeMetricOverlay
+
+										local function makeCard(title, y, accent, textColor)
+											local card = Instance.new("Frame")
+											card.Name = title .. "Overlay"
+											card.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+											card.BackgroundTransparency = 0.12
+											card.BorderSizePixel = 0
+											card.Position = UDim2.new(0, 8, 0, y)
+											card.Size = UDim2.new(0, 106, 0, 42)
+											card.Parent = overlayGui
+											local corner = Instance.new("UICorner")
+											corner.CornerRadius = UDim.new(0, 8)
+											corner.Parent = card
+											local stroke = Instance.new("UIStroke")
+											stroke.Color = Color3.fromRGB(0, 0, 0)
+											stroke.Transparency = 1
+											stroke.Thickness = 1
+											stroke.Parent = card
+											local label = Instance.new("TextLabel")
+											label.BackgroundTransparency = 1
+											label.Position = UDim2.new(0, 0, 0, 0)
+											label.Size = UDim2.new(1, 0, 1, 0)
+											label.Font = Enum.Font.GothamBold
+											label.TextColor3 = textColor
+											label.TextSize = 13
+											label.TextXAlignment = Enum.TextXAlignment.Center
+											label.Parent = card
+											card.Active = true
+											local dragging, dragInput, dragStart, startPosition = false, nil, nil, nil
+											local dragChangedConnection
+											card.InputBegan:Connect(function(input)
+												if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+													dragging = true
+													dragStart = input.Position
+													startPosition = card.Position
+													input.Changed:Connect(function()
+														if input.UserInputState == Enum.UserInputState.End then dragging = false end
+													end)
+												end
+											end)
+											card.InputChanged:Connect(function(input)
+												if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+											end)
+											dragChangedConnection = userInputService.InputChanged:Connect(function(input)
+												if dragging and input == dragInput then
+													local delta = input.Position - dragStart
+													card.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+												end
+											end)
+											card.Destroying:Connect(function()
+												if dragChangedConnection then dragChangedConnection:Disconnect() end
+											end)
+											return card, label
+										end
+
+										local function refreshMetricOverlay()
+											if not (overlayPingEnabled or overlayFPSEnabled) then removeMetricOverlay(); return end
+											if not overlayGui or not overlayGui.Parent then
+												overlayGui = Instance.new("ScreenGui")
+												overlayGui.Name = "LarpMetricOverlays"
+												overlayGui.ResetOnSpawn = false
+												local parent = game:GetService("CoreGui")
+												if gethui then local ok, holder = pcall(gethui); if ok and typeof(holder) == "Instance" then parent = holder end end
+												overlayGui.Parent = parent
+												larpBBState.CustomOverlayGui = overlayGui
+											end
+											if overlayPingEnabled and not pingCard then
+												pingCard, pingLabel = makeCard("Ping", 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255))
+												pingCard.BackgroundTransparency = 1
+											end
+											if not overlayPingEnabled and pingCard then destroyCard(pingCard); pingCard, pingLabel = nil, nil end
+											if overlayFPSEnabled and not fpsCard then
+													fpsCard, fpsLabel = makeCard("FPS", overlayPingEnabled and 58 or 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255))
+													fpsLabel.TextSize = 16
+												end
+											if not overlayFPSEnabled and fpsCard then destroyCard(fpsCard); fpsCard, fpsLabel = nil, nil end
+											if not overlayConnection then
+												local elapsed, frames, fps = 0, 0, 0
+												overlayConnection = runService.RenderStepped:Connect(function(dt)
+													frames += 1; elapsed += dt
+													if elapsed >= 0.5 then fps = math.floor(frames / elapsed + 0.5); frames, elapsed = 0, 0 end
+													if pingLabel then pingLabel.Text = "Ping: " .. math.floor((latestPingMs or localPlayer:GetNetworkPing() * 1000) + 0.5) .. "ms" end
+													if fpsLabel then fpsLabel.Text = tostring(fps) .. " FPS" end
+												end)
+											end
+										end
+
+										local function setMetric(kind, enabled)
+											if kind == "ping" then overlayPingEnabled = enabled else overlayFPSEnabled = enabled end
+											refreshMetricOverlay()
+										end
+										tbl24.toggles.Show_Overlay_Ping = overlaysGroup:AddToggle({ Name = "Show Ping", SaveId = "Overlay_Show_Ping", Default = false, Callback = function(enabled) setMetric("ping", enabled) end })
+										tbl24.toggles.Show_Overlay_FPS = overlaysGroup:AddToggle({ Name = "Show FPS", SaveId = "Overlay_Show_FPS", Default = false, Callback = function(enabled) setMetric("fps", enabled) end })
+										tbl24.toggles.Hide_Overlays = overlaysGroup:AddToggle({ Name = "Hide Overlays", SaveId = "Hide_Overlays", Default = false, Callback = function(enabled) if enabled then tbl25.UIExtra.HideOverlays() else refreshMetricOverlay() end end })
+										end
 								onInputChanged()
 								vectorLength()
 								vectorAdd()
@@ -22168,14 +22894,13 @@ end
 							tbl25.Visuals.Toggle(tbl20.AbilityESPEnabled)
 							tbl25.Visuals.RefreshLoop()
 							tbl25.AFK.Toggle(tbl20.AntiAFK)
-							tbl25.Script.Toggle(tbl20.AutoRejoinExecute)
 
 							if tbl20.AvatarEnabled then
 								task.defer(tbl23.Toggle, true)
 							end
 
-							if tbl20.KHEnabled then
-								task.defer(tbl23.ToggleKH, true)
+							if tbl20.KorbloxEnabled or tbl20.HeadlessEnabled then
+									task.defer(tbl23.ToggleKH)
 							end
 
 							if tbl20.UnlockAllEnabled then
