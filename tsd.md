@@ -951,9 +951,9 @@
 												ElementHover = Color3.fromRGB(34, 34, 41),
 												Border = Color3.fromRGB(38, 38, 46),
 												BorderSoft = Color3.fromRGB(28, 28, 34),
-												Accent = Color3.fromRGB(200, 30, 50),
-												AccentDark = Color3.fromRGB(140, 18, 34),
-												AccentLight = Color3.fromRGB(255, 80, 100),
+												Accent = Color3.fromRGB(38, 38, 42),
+												AccentDark = Color3.fromRGB(24, 24, 27),
+												AccentLight = Color3.fromRGB(70, 70, 78),
 												Text = Color3.fromRGB(235, 235, 238),
 												SubText = Color3.fromRGB(140, 140, 148),
 												TextHover = Color3.fromRGB(255, 255, 255),
@@ -962,7 +962,7 @@
 												Black = Color3.new(),
 												Success = Color3.fromRGB(126, 238, 174),
 												Warning = Color3.fromRGB(255, 197, 117),
-												Error = Color3.fromRGB(255, 116, 145),
+												Error = Color3.fromRGB(175, 175, 180),
 											}
 
 											index.Colors = colors
@@ -997,30 +997,45 @@
 											v98 = createInstance
 
 											parentGui = function(action)
-												if gethui then
-													local decoded, checkpointFolder = pcall(gethui)
+											    if gethui then
+											        local decoded, checkpointFolder = pcall(gethui)
+											        if decoded and typeof(checkpointFolder) == "Instance" then
+											            if pcall(function()
+											                action.Parent = checkpointFolder
+											            end) then
+											                return action
+											            end
+											        end
+											    end
 
-													if decoded and typeof(checkpointFolder) == "Instance" then
-														if pcall(function()
-															action.Parent = checkpointFolder
-														end) then
-															return action
-														end
-													end
-												end
+											    local callable = syn and syn.protect_gui
+											    if callable then
+											        pcall(callable, action)
+											    end
+											    if protectgui and protectgui ~= callable then
+											        pcall(protectgui, action)
+											    end
 
-												local callable = syn and syn.protect_gui
+											    local playerGui
+											    local playerGuiOk = pcall(function()
+											        playerGui = localPlayer and (localPlayer:FindFirstChildOfClass("PlayerGui") or localPlayer:FindFirstChild("PlayerGui"))
+											    end)
+											    if playerGuiOk and playerGui then
+											        if pcall(function()
+											            action.Parent = playerGui
+											        end) then
+											            return action
+											        end
+											    end
 
-												if callable then
-													pcall(callable, action)
-												end
+											    if pcall(function()
+											        action.Parent = coreGui
+											    end) then
+											        return action
+											    end
 
-												if protectgui and protectgui ~= callable then
-													pcall(protectgui, action)
-												end
-
-												action.Parent = coreGui
-												return action
+											    warn("[LARP] Could not parent the UI to PlayerGui or CoreGui in this execution context.")
+											    return action
 											end
 
 											fn46 = function(line, object, descendant)
@@ -1269,7 +1284,7 @@
 
 													end))
 
-													if touchEnabled then
+													if touchEnabled and not userInputService.KeyboardEnabled then
 														local knob = createInstance(stack[39], {
 															Name = "MobileToggle",
 															Size = UDim2.new(0, 46, 0, 46),
@@ -1467,10 +1482,19 @@
 													if not line.screenGuiYay then
 														return 1
 													end
-													local Camera = workspace.CurrentCamera
-													local mouseLocation = line.screenGuiYay.AbsoluteSize
-													local viewportSize = Camera and Camera.ViewportSize or mouseLocation
-													local maxLength = math.max(mouseLocation.X, viewportSize.X)
+									local Camera = workspace.CurrentCamera
+									local mouseLocation = line.screenGuiYay.AbsoluteSize
+									local viewportSize = Camera and Camera.ViewportSize or mouseLocation
+									local mobileOnly = touchEnabled and not userInputService.KeyboardEnabled
+									local mobileViewport = mouseLocation.X > 0 and mouseLocation.Y > 0 and mouseLocation or viewportSize
+									if mobileOnly and mobileViewport.X > 0 and mobileViewport.Y > 0 then
+										local fitScale = math.min((mobileViewport.X - 24) / 753, (mobileViewport.Y - 32) / 493)
+										fitScale = math.max(0.1, fitScale)
+										local menuScale = math.clamp(tonumber(tbl20.MenuScale) or 100, 50, 150) / 100
+										local mobileScale = math.min(math.min(1, fitScale) * menuScale, fitScale)
+										return math.clamp(mobileScale, 0.1, 1.5)
+									end
+									local maxLength = math.max(mouseLocation.X, viewportSize.X)
 													local cellScore = math.max(mouseLocation.Y, viewportSize.Y)
 													if maxLength <= 0 or cellScore <= 0 then
 														return stack[18]
@@ -1482,9 +1506,10 @@
 														tbl20.MenuScale = MAX_ITERATIONS
 													end
 
-													local intensity = touchEnabled and 0.1 or 1
+													local intensity = (touchEnabled and not userInputService.KeyboardEnabled) and 0.1 or 1
 													local clamped = math.clamp(math.min((maxLength - 40) / 753, (cellScore - 40) / 493), intensity, 1)
-													return math.clamp(clamped * MAX_ITERATIONS / 100, intensity, 1.5)
+													-- UI Scale: minimo 50% (reduz no maximo pela metade), maximo 150%
+	return math.clamp(clamped * MAX_ITERATIONS / 100, 0.1, 1.5)
 												end
 
 												index.UpdateLayoutScale = function(line)
@@ -1588,7 +1613,7 @@ local knob = line.mainFrameYay:FindFirstChildOfClass(stack[16])
 															saveConfig()
 															local query
 
-															if touchEnabled then
+															if touchEnabled and not userInputService.KeyboardEnabled then
 																query = "Tap the button in the bottom left to Hide/Unhide the UI."
 															else
 																query = (line.toggleVisibilityKeyName or "RightAlt") .. " to Hide/Unhide the UI."
@@ -1637,6 +1662,16 @@ end
 													createInstance("UICorner", { Name = "CustomBackgroundCorner", CornerRadius = UDim.new(0, stack[115]), Parent = line.customBackgroundImage })
 													createInstance(stack[16], { Name = "MainFrameUIScale", Scale = 1, Parent = line.mainFrameYay })
 
+													line.tabSidebarBackground = createInstance("Frame", {
+														Name = "TabSidebarBackground",
+														BackgroundColor3 = line.config.Colors.Surface,
+														BackgroundTransparency = 0,
+														BorderSizePixel = 0,
+														Position = UDim2.new(0, 0, 0, 70),
+														Size = UDim2.new(0, 186, 1, -70),
+														Parent = line.mainFrameYay,
+													})
+													createInstance("UICorner", { Name = "TabSidebarBackgroundCorner", CornerRadius = UDim.new(0, 10), Parent = line.tabSidebarBackground })
 													line.dragBarThing = createInstance("Frame", {
 														Name = "DragBarForDragging",
 														BackgroundTransparency = 1,
@@ -1671,10 +1706,12 @@ end
 														return manager
 													end
 
-													line.minimizeButton = handlePlayerAdded("MinimizeButton", "120931250449806", 50)
-													line.closeButton = handlePlayerAdded("CloseButton", "73070135088117", 24)
+									line.minimizeButton = handlePlayerAdded("MinimizeButton", "120931250449806", 50)
+									line.closeButton = handlePlayerAdded("CloseButton", "73070135088117", 24)
+									-- Remove o ícone de traço do cabeçalho; a UI continua alternável pelo RightAlt.
+									line.minimizeButton.Visible = false
 
-													line.minimizeButton.MouseButton1Click:Connect(function()
+									line.minimizeButton.MouseButton1Click:Connect(function()
 														line:SetVisible(false)
 													end)
 
@@ -1759,6 +1796,7 @@ TextYAlignment = Enum.TextYAlignment.Center,
 																							-- LARP VERTICAL DIVIDER (sidebar | content)
 										local contentDivider = createInstance("Frame", {
 											Name = "ContentDivider",
+											Visible = false,
 											BackgroundColor3 = line.config.Colors.BorderSoft,
 											BackgroundTransparency = 0.5,
 											BorderSizePixel = 0,
@@ -2058,6 +2096,7 @@ if matches then
 local startsAt = string.find(string.lower(descendant.Text), words[1], 1, true)
 
 table.insert(found, {
+groupFrame = groupFrame,
 label = descendant,
 name = descendant.Text,
 group = groupName,
@@ -2126,8 +2165,29 @@ if line.currentTabYay ~= result.tab then
 result.tab:Activate()
 end
 
+local selectedGroup
+for _, groupState in ipairs(result.tab.groupsInTab or {}) do
+if groupState.mainFrame == result.groupFrame then
+selectedGroup = groupState
+break
+end
+end
+
+local expandedGroup = false
+if selectedGroup and selectedGroup.isCollapsed then
+for _, groupState in ipairs(result.tab.groupsInTab or {}) do
+if groupState ~= selectedGroup and not groupState.isCollapsed then
+groupState.isCollapsed = true
+groupState.UpdateSize(0.25)
+end
+end
+selectedGroup.isCollapsed = false
+selectedGroup.UpdateSize(0.25)
+expandedGroup = true
+end
+
 task.spawn(function()
-task.wait(0.08)
+task.wait(expandedGroup and 0.3 or 0.08)
 local label = result.label
 local column = result.column
 
@@ -2695,6 +2755,18 @@ end
 												})
 
 												createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(1, 0), Parent = sourceTable.fillFrame })
+												sourceTable.thumbFrame = createInstance("Frame", {
+													Name = "SliderThumb",
+													AnchorPoint = Vector2.new(0.5, 0.5),
+													Position = UDim2.new(elapsedTime, 0, 0.5, 0),
+													Size = UDim2.new(0, 8, 0, 8),
+													BackgroundColor3 = line.Library.config.Colors.White,
+													BorderSizePixel = 0,
+													ZIndex = 3,
+													Parent = sourceTable.backgroundFrame,
+												})
+												createInstance("UICorner", { CornerRadius = UDim.new(1, 0), Parent = sourceTable.thumbFrame })
+												createInstance("UIStroke", { Color = line.Library.config.Colors.Secondary, Thickness = 1, Parent = sourceTable.thumbFrame })
 												local vertexCount = createInstance
 												local players = { Name = "SliderFillGradient" }
 												local controller = ColorSequence.new
@@ -2757,6 +2829,7 @@ end
 													if math.abs(byte - difference) <= 0.0001 then
 														byte = difference
 														sourceTable.fillFrame.Size = UDim2.new(0, 238 * byte, 1, 0)
+														sourceTable.thumbFrame.Position = UDim2.new(byte, 0, 0.5, 0)
 														return
 													end
 
@@ -2774,6 +2847,7 @@ end
 														end
 
 														sourceTable.fillFrame.Size = UDim2.new(0, 238 * byte, stack[18], 0)
+														sourceTable.thumbFrame.Position = UDim2.new(byte, 0, 0.5, 0)
 
 														if byte == difference then
 															connection:Disconnect()
@@ -2839,6 +2913,8 @@ end
 												local function generateRandomPoints(descendant)
 													local isArray = descendant == "drag" or descendant == "hover"
 													tweenInstance(sourceTable.backgroundFrame, { Size = UDim2.new(stack[33], 238, 0, descendant == stack[159] and stack[72] or descendant == stack[117] and 6 or 5) }, stack[26], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+													local thumbSize = descendant == stack[159] and 10 or descendant == stack[117] and 9 or 8
+													tweenInstance(sourceTable.thumbFrame, { Size = UDim2.new(0, thumbSize, 0, thumbSize) }, stack[26], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 													isArray = isArray and line.Library.config.Colors.Text or line.Library.config.Colors.SubText
 													tweenInstance(sourceTable.valueBox, { TextColor3 = isArray }, 0.25, Enum.EasingStyle.Quint)
 													tweenInstance(sourceTable.labelText, { TextColor3 = isArray }, 0.25, Enum.EasingStyle.Quint)
@@ -3063,6 +3139,30 @@ end
 												})
 
 												local query = "%." .. handlePlayerAdded(object.Increment) .. "f"
+												sourceTable.minThumbFrame = createInstance("Frame", {
+													Name = "DoubleSliderMinThumb",
+													AnchorPoint = Vector2.new(0.5, 0.5),
+													Position = UDim2.new(0, 0, 0.5, 0),
+													Size = UDim2.new(0, 8, 0, 8),
+													BackgroundColor3 = line.Library.config.Colors.White,
+													BorderSizePixel = 0,
+													ZIndex = 3,
+													Parent = sourceTable.backgroundFrame,
+												})
+												createInstance("UICorner", { CornerRadius = UDim.new(1, 0), Parent = sourceTable.minThumbFrame })
+												createInstance("UIStroke", { Color = line.Library.config.Colors.Secondary, Thickness = 1, Parent = sourceTable.minThumbFrame })
+												sourceTable.maxThumbFrame = createInstance("Frame", {
+													Name = "DoubleSliderMaxThumb",
+													AnchorPoint = Vector2.new(0.5, 0.5),
+													Position = UDim2.new(0, 0, 0.5, 0),
+													Size = UDim2.new(0, 8, 0, 8),
+													BackgroundColor3 = line.Library.config.Colors.White,
+													BorderSizePixel = 0,
+													ZIndex = 3,
+													Parent = sourceTable.backgroundFrame,
+												})
+												createInstance("UICorner", { CornerRadius = UDim.new(1, 0), Parent = sourceTable.maxThumbFrame })
+												createInstance("UIStroke", { Color = line.Library.config.Colors.Secondary, Thickness = 1, Parent = sourceTable.maxThumbFrame })
 
 												local function initialize(descendant)
 													return string.format(query, descendant)
@@ -3131,6 +3231,8 @@ end
 														sourceTable.maxEdgeFrame.Position = UDim2.new(net, 0, stack[81], stack[33])
 														sourceTable.fillFrame.Position = UDim2.new(elapsedTime, 0, stack[33], 0)
 														sourceTable.fillFrame.Size = UDim2.new(net - elapsedTime, stack[33], 1, stack[33])
+														sourceTable.minThumbFrame.Position = UDim2.new(elapsedTime, 0, 0.5, 0)
+														sourceTable.maxThumbFrame.Position = UDim2.new(net, 0, 0.5, 0)
 
 														if elapsedTime == difference and net == openError then
 															connection:Disconnect()
@@ -3162,6 +3264,8 @@ end
 
 													initializeSystem()
 													sourceTable.valueLabelText.Text = initialize(screenPoint) .. " - " .. initialize(newPrice)
+													sourceTable.minThumbFrame.Position = UDim2.new(difference, 0, 0.5, 0)
+													sourceTable.maxThumbFrame.Position = UDim2.new(openError, 0, 0.5, 0)
 
 																if not object.NoSave then
 																	configData.DoubleSliders[radians] = { Min = screenPoint, Max = newPrice }
@@ -3178,6 +3282,9 @@ end
 													local cacheKey = (concatenated or top) and line.Library.config.Colors.Text or line.Library.config.Colors.SubText
 													tweenInstance(sourceTable.labelText, { TextColor3 = cacheKey }, 0.25, Enum.EasingStyle.Quint)
 													tweenInstance(sourceTable.valueLabelText, { TextColor3 = cacheKey }, stack[26], Enum.EasingStyle.Quint)
+													local thumbSize = (concatenated or top) and 9 or 8
+													tweenInstance(sourceTable.minThumbFrame, { Size = UDim2.new(0, thumbSize, 0, thumbSize) }, stack[26], Enum.EasingStyle.Quint)
+													tweenInstance(sourceTable.maxThumbFrame, { Size = UDim2.new(0, thumbSize, 0, thumbSize) }, stack[26], Enum.EasingStyle.Quint)
 												end
 
 												local function calculateDistance(descendant)
@@ -4604,7 +4711,8 @@ end
 											sourceTable.inputFrame = createInstance("Frame", {
 												Name = stack[87],
 												BackgroundColor3 = line.Library.config.Colors.Element,
-												Position = UDim2.new(stack[33], 0, 0, config + 22),
+												AnchorPoint = object.Centered and Vector2.new(0.5, 0) or Vector2.new(0, 0),
+		Position = object.Centered and UDim2.new(0.5, 0, 0, config + 22) or UDim2.new(stack[33], 0, 0, config + 22),
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
 												Size = UDim2.new(0, 238, 0, 26),
@@ -5050,11 +5158,6 @@ end
 														end
 													end
 
-													-- O primeiro controle do grupo é a função principal.
-													local primaryToggle = sourceTable.elementsInGroup[1]
-													if primaryToggle and primaryToggle.Set then
-														primaryToggle:Set(true)
-													end
 												end
 
 												clampValue(0.25)
@@ -5477,16 +5580,16 @@ end
 											buttonFrame = createInstance("Frame", {
 												Name = "TabButton",
 												Active = false,
-												BackgroundColor3 = line.Library.config.Colors.Element,
-												BackgroundTransparency = 1,
+												BackgroundColor3 = line.Library.config.Colors.Surface,
+												BackgroundTransparency = 0,
 												BorderColor3 = line.Library.config.Colors.Black,
 												BorderSizePixel = 0,
-												Size = UDim2.new(0, 136, 0, 28),
+												Size = UDim2.new(0, 134, 0, 32),
 												Parent = line.tabHolderFrame,
 											}),
 										}
 
-											createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 7), Parent = firstElement.buttonFrame })
+											createInstance("UICorner", { Name = "UICorner", CornerRadius = UDim.new(0, 10), Parent = firstElement.buttonFrame })
 											firstElement.buttonStroke = createInstance("UIStroke", {
 												Name = "TabStroke",
 												Color = line.Library.config.Colors.BorderSoft,
@@ -5501,9 +5604,9 @@ end
 												Image = object.Icon,
 												ImageColor3 = line.Library.config.Colors.Muted,
 												BackgroundTransparency = 1,
-												Position = UDim2.new(0, 9, 0.5, -7.14),
+												Position = UDim2.new(0, 10, 0.5, -8),
 												BorderSizePixel = 0,
-												Size = UDim2.new(0, 14.28, 0, 14.28),
+												Size = UDim2.new(0, 16, 0, 16),
 												ScaleType = Enum.ScaleType.Fit,
 												Parent = firstElement.buttonFrame,
 											})
@@ -5512,8 +5615,8 @@ end
 												Name = "ActiveTabBar",
 												BackgroundColor3 = line.Library.config.Colors.Text,
 												BackgroundTransparency = 1,
-												Position = UDim2.new(0, 0, 0.5, -8),
-												Size = UDim2.new(0, 2, 0, 16),
+												Position = UDim2.new(0, 4, 0.5, -10),
+												Size = UDim2.new(0, 3, 0, 20),
 												BorderSizePixel = 0,
 												ZIndex = 3,
 												Parent = firstElement.buttonFrame,
@@ -5527,11 +5630,11 @@ end
 											Text = object.Name,
 											BackgroundColor3 = line.Library.config.Colors.White,
 											BackgroundTransparency = 1,
-											Position = UDim2.new(stack[33], 30, 0.5, -8),
+											Position = UDim2.new(stack[33], 34, 0.5, -9),
 											BorderSizePixel = 4,
 											BorderColor3 = Color3.new(),
-											TextSize = 15,
-											Size = UDim2.new(0, stack[158], 0, 16),
+											TextSize = 16,
+											Size = UDim2.new(0, stack[158], 0, 18),
 											TextXAlignment = Enum.TextXAlignment.Left,
 											Parent = firstElement.buttonFrame,
 										})
@@ -5611,14 +5714,14 @@ end
 											line.Library.currentTabYay = firstElement
 											firstElement.isActive = true
 										tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.ElementHover, BackgroundTransparency = 0 }, stack[64])
-										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 4, 0.5, -8), BackgroundTransparency = 0 }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 4, 0.5, -10), BackgroundTransparency = 0 }, stack[64], Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 																					firstElement.contentFadeFrame.Visible = true
 											firstElement.contentFadeFrame.GroupTransparency = 1
 											tweenInstance(firstElement.contentFadeFrame, { GroupTransparency = 0 }, 0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 											local elapsedTime = table.find(line.tabsInSection, firstElement) or 1
 											local currentPosition = line.tabIndicatorFrame.Position
-											local index53 = tonumber(stack[48]) or (28 + (tonumber(stack[174]) or 5))
-											local targetSize = UDim2.new(0, 7, stack[33], 10 + (elapsedTime - 1) * index53)
+											local index53 = tonumber(stack[48]) or (32 + (tonumber(stack[174]) or 5))
+											local targetSize = UDim2.new(0, 1, stack[33], 10 + (elapsedTime - 1) * index53)
 											tweenInstance(line.tabIndicatorFrame, { Position = targetSize }, stack[64], Enum.EasingStyle.Exponential, Enum.EasingDirection.Out)
 
 											for _, bubble in ipairs(line.tabIndicatorTrails) do
@@ -5637,8 +5740,8 @@ end
 
 										firstElement.Deactivate = function()
 											firstElement.isActive = false
-												tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Element, BackgroundTransparency = 1 }, 0.35)
-										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 0, 0.5, -8), BackgroundTransparency = 1 }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+												tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Surface, BackgroundTransparency = 0 }, 0.35)
+										tweenInstance(firstElement.activeBar, { Position = UDim2.new(0, 0, 0.5, -10), BackgroundTransparency = 1 }, 0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
 												tweenInstance(firstElement.buttonStroke, { Color = line.Library.config.Colors.BorderSoft, Transparency = 1 }, 0.35)
 											firstElement.contentFadeFrame.Visible = false
 											firstElement.contentFadeFrame.GroupTransparency = 1
@@ -5657,6 +5760,7 @@ end
 
 										button.MouseEnter:Connect(function()
 											if not firstElement.isActive then
+												tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.ElementHover, BackgroundTransparency = 0 }, 0.18)
 												tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.TextHover }, stack[100])
 												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.TextHover }, stack[100])
 											end
@@ -5664,6 +5768,7 @@ end
 
 										button.MouseLeave:Connect(function()
 											if not firstElement.isActive then
+												tweenInstance(firstElement.buttonFrame, { BackgroundColor3 = line.Library.config.Colors.Surface, BackgroundTransparency = 0 }, 0.22)
 												tweenInstance(firstElement.nameLabel, { TextColor3 = line.Library.config.Colors.Muted }, 0.3)
 												tweenInstance(firstElement.iconImg, { ImageColor3 = line.Library.config.Colors.Muted }, 0.3)
 											end
@@ -5733,7 +5838,7 @@ end
 										sorted.Rotation = stack[68]
 										sorted.Parent = j
 										bottomSnapZone("UIGradient", sorted)
-										createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(0, 7), Parent = players.mainFrame })
+										createInstance("UICorner", { Name = stack[137], CornerRadius = UDim.new(0, 10), Parent = players.mainFrame })
 
 										createInstance("UIAspectRatioConstraint", {
 											Name = "UIAspectRatioConstraint",
@@ -5742,6 +5847,7 @@ end
 												BorderColor3 = line.config.Colors.Black,
 												BackgroundColor3 = line.config.Colors.White,
 												Image = sourceTable.Icon,
+												Visible = false,
 												BackgroundTransparency = 1,
 												Position = UDim2.new(0, stack[115], 0.5, -7),
 												BorderSizePixel = 0,
@@ -5753,15 +5859,15 @@ end
 										createInstance("TextLabel", {
 											Name = "SectionName",
 											FontFace = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
-											TextColor3 = line.config.Colors.Text,
-											Text = sourceTable.Name,
+											TextColor3 = line.config.Colors.AccentLight,
+											Text = string.upper(tostring(sourceTable.Name)),
 											BackgroundColor3 = line.config.Colors.White,
 											BackgroundTransparency = 1,
-											Position = UDim2.new(0, 32, 0.5, -8.5),
+											Position = UDim2.new(0, 10, 0.5, -6),
 											BorderSizePixel = 0,
 											BorderColor3 = Color3.new(),
-											TextSize = stack[147],
-											Size = UDim2.new(stack[33], stack[158], 0, 16),
+											TextSize = 10,
+											Size = UDim2.new(stack[33], stack[158], 0, 14),
 											TextXAlignment = Enum.TextXAlignment.Left,
 											Parent = players.mainFrame,
 										})
@@ -5784,7 +5890,7 @@ end
 											BackgroundTransparency = 1,
 													Visible = false,
 											BorderSizePixel = 0,
-											Position = UDim2.new(0, 7, 0, 10),
+											Position = UDim2.new(0, 1, 0, 10),
 											Size = UDim2.new(0, 2, 0, 16),
 											Parent = players.containerFrame,
 										})
@@ -5813,8 +5919,8 @@ end
 										players.tabHolderFrame = createInstance("Frame", {
 											Name = "TabHolderFrame",
 											BackgroundTransparency = 1,
-											Position = UDim2.new(stack[33], 11, 0, 2),
-											Size = UDim2.new(stack[33], 146, 0, 0),
+											Position = UDim2.new(stack[33], 5, 0, 2),
+											Size = UDim2.new(stack[33], 134, 0, 0),
 											ClipsDescendants = stack[200],
 											Parent = players.containerFrame,
 										})
@@ -5847,7 +5953,7 @@ end
 
 										local function mainLoop()
 											local elapsedTime = getTabsHeight()
-											players.tabHolderFrame.Size = UDim2.new(stack[33], stack[3], 0, elapsedTime)
+											players.tabHolderFrame.Size = UDim2.new(stack[33], 134, 0, elapsedTime)
 
 											if players.isExpanded then
 												tweenInstance(players.containerFrame, { Size = UDim2.new(0, stack[45], 0, elapsedTime + 18) }, 0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
@@ -5979,11 +6085,17 @@ end
 										callWithRestoredThreadIdentity(tbl25.UnlockAll.Stop, true)
 									end
 
-									if tbl25.UIExtra then
-										callWithRestoredThreadIdentity(tbl25.UIExtra.HideOverlays)
-									end
+										if tbl25.UIExtra then
+											callWithRestoredThreadIdentity(tbl25.UIExtra.HideOverlays)
+										end
+										if larpBBState.MobileUICleanup then
+											callWithRestoredThreadIdentity(larpBBState.MobileUICleanup)
+										end
+										if larpBBState.WatermarkCleanup then
+											callWithRestoredThreadIdentity(larpBBState.WatermarkCleanup)
+										end
 
-									if tbl25.AFK then
+										if tbl25.AFK then
 										callWithRestoredThreadIdentity(tbl25.AFK.Toggle, stack[101])
 									end
 
@@ -6240,7 +6352,7 @@ end
 																																																																																																															if WeaponBase == "ParryAccuracy" then
 																																																																																																																yString = math.clamp(tonumber(yString) or 80, 0, 100)
 																																																																																																															elseif WeaponBase == "ParryRange" then
-																																																																																																															yString = math.clamp(tonumber(yString) or 0, 0, 10)
+																																																																																																															yString = math.clamp(tonumber(yString) or 0, 0, 30)
 																																																																																																															elseif WeaponBase == "MenuScale" then
 																																																																																																																yString = math.clamp(tonumber(yString) or 100, 50, 150)
 																																																																																																															end
@@ -6257,7 +6369,7 @@ end
 																																																																																																															if WeaponBase == "ParryAccuracy" then
 																																																																																																																yString = math.clamp(tonumber(yString) or 80, 0, 100)
 																																																																																																															elseif WeaponBase == "ParryRange" then
-																																																																																																																yString = math.clamp(tonumber(yString) or 0, 0, 10)
+																																																																																																																yString = math.clamp(tonumber(yString) or 0, 0, 30)
 																																																																																																															elseif WeaponBase == "MenuScale" then
 																																																																																																																yString = math.clamp(tonumber(yString) or 100, 50, 150)
 																																																																																																															end
@@ -6725,7 +6837,7 @@ end
 
 												if player6 then
 													local track = stack[200]
-													cell = existingPlayer:GetAttribute(stack[114]) == track
+													cell = stack[114] ~= nil and existingPlayer:GetAttribute(stack[114]) == track
 												else
 													cell = player6
 												end
@@ -6754,7 +6866,7 @@ end
 													if track and track.Enabled then
 														if existingPlayer == stack[156] or existingPlayer == stack[160] then
 															local resultLabel = radians:FindFirstChild("ready")
-															resultLabel = resultLabel and resultLabel:FindFirstChild(stack[171])
+															resultLabel = resultLabel and stack[171] ~= nil and resultLabel:FindFirstChild(stack[171]) or nil
 															local cell = not radians.Red.Visible
 
 															if cell then
@@ -6827,8 +6939,8 @@ end
 									end
 
 									coroutineBody({
-										ParryAccuracy = 0,
-														ParryRange = 0,
+										ParryAccuracy = 60,
+														ParryRange = 1,
 										AntiCurveEnabled = true,
 										BackwardsAntiCurveEnabled = true,
 										AutoParryType = stack[90],
@@ -6836,7 +6948,7 @@ end
 										ParryLoopType = "PreSimulation",
 										CooldownProtectionEnabled = stack[101],
 										AutoAbilityEnabled = false,
-										RandomizedParryAccuracy = stack[101],
+										RandomizedParryAccuracy = false,
 										RandomAccuracyMin = 1,
 										RandomAccuracyMax = stack[158],
 									})
@@ -6931,7 +7043,7 @@ end
 										if callbackFunction then
 											bestDistance = callbackFunction
 										else
-											bestDistance = line:IsA("Model") and line:FindFirstChild("Body") and line:FindFirstChild(stack[149])
+											bestDistance = line:IsA("Model") and line:FindFirstChild("Body") and stack[149] ~= nil and line:FindFirstChild(stack[149])
 										end
 									else
 										bestDistance = line
@@ -6941,7 +7053,7 @@ end
 								end
 
 								index6 = function(line)
-									return line and line:IsA("Model") and line:FindFirstChild("Body") and line:FindFirstChild(stack[149]) and not line:FindFirstChild("zoomies")
+									return line and line:IsA("Model") and line:FindFirstChild("Body") and stack[149] ~= nil and line:FindFirstChild(stack[149]) and not line:FindFirstChild("zoomies")
 								end
 
 								managerObject = setmetatable({}, { __mode = "k" })
@@ -6992,7 +7104,7 @@ end
 														cell = player6.Parent
 
 														if cell then
-															cell = (player6:GetAttribute(stack[138]) or 1) > stack[33]
+															cell = ((stack[138] ~= nil and player6:GetAttribute(stack[138])) or 1) > stack[33]
 														end
 													end
 												else
@@ -7080,7 +7192,8 @@ end return normal ;end
 											return false
 										end
 										local radians = index7(line)
-										local difference = color:Dot(radius) / zCoordinate * alpha
+										-- Cosseno entre a velocidade da bola e a direcao ate o jogador (antes multiplicava por alpha e virava velocidade^2).
+										local difference = color:Dot(radius) / (zCoordinate * alpha)
 										local openError = math.min(alpha / stack[158], 40)
 										local step = 7 * math.max(difference, 0)
 										local mathMax = 15 - math.min(zCoordinate / 1000, stack[147]) + step + openError
@@ -7642,7 +7755,11 @@ end return normal ;end
 												table.remove(larpBBState.SpamParries, 1)
 											end
 
-											larpBBState.SpamParries[#larpBBState.SpamParries + stack[18]] = osClock
+											-- Chamadas quase simultaneas contam como um parry so (evita o auto spam entrar por contagem dupla).
+											local lastSpamEntry = larpBBState.SpamParries[#larpBBState.SpamParries]
+											if not lastSpamEntry or osClock - lastSpamEntry >= 0.06 then
+												larpBBState.SpamParries[#larpBBState.SpamParries + stack[18]] = osClock
+											end
 											local cell = not descendant
 
 											if cell then
@@ -8321,75 +8438,178 @@ Listener.Observe = ObserveDevice
 
 									tbl25.LoadCurves()
 
+									larpBBState.SetupDirectParry = function(pryController)
+									    local directParryState = larpBBState.DirectParry
+									    if type(directParryState) ~= "table" then
+									        directParryState = {}
+									        larpBBState.DirectParry = directParryState
+									    end
+									    directParryState.Screen = directParryState.Screen or {}
+									    directParryState.Aim = directParryState.Aim or { 0, 0 }
+									    directParryState.LastRefresh = directParryState.LastRefresh or 0
+
+									    local function getPRYUpvalue(index)
+									        if type(getupvalue) == "function" then
+									            local ok, first, second = pcall(getupvalue, pryController, index)
+									            if ok then return second ~= nil and second or first end
+									        end
+									        if debug and type(debug.getupvalue) == "function" then
+									            local ok, first, second = pcall(debug.getupvalue, pryController, index)
+									            if ok then return second ~= nil and second or first end
+									        end
+									        if debug and type(debug.getupvalues) == "function" then
+									            local ok, values = pcall(debug.getupvalues, pryController)
+									            if ok and type(values) == "table" then return values[index] end
+									        end
+									    end
+
+									    if not directParryState.Ready then
+									        local prepared = pcall(function()
+									            local cipherMap = getPRYUpvalue(3)
+									            local timeEncoder = getPRYUpvalue(4)
+									            local transform = getPRYUpvalue(8)
+									            assert(type(cipherMap) == "table", "PRY cipher upvalue unavailable")
+									            assert(type(timeEncoder) == "function", "PRY time encoder unavailable")
+									            local cipher = cipherMap[cipherMap[1]]
+									            assert(cipher ~= nil, "PRY cipher unavailable")
+									            local keyString = timeEncoder(cipher, "TIME")
+									            assert(type(keyString) == "string" and #keyString > 0, "PRY timestamp key unavailable")
+									            local keyBytes = table.create(#keyString)
+									            for index = 1, #keyString do
+									                keyBytes[index] = string.byte(keyString, index)
+									            end
+									            directParryState.Cipher = cipher
+									            directParryState.Transform = transform
+									            directParryState.KeyBytes = keyBytes
+									            directParryState.KeyLength = #keyBytes
+									            directParryState.Ready = true
+									        end)
+									        if not prepared then directParryState.Ready = false end
+									    end
+
+									    if directParryState.Ready and not directParryState.HookInstalled and type(hookfunction) == "function" then
+									        local dummyRemote = Instance.new("RemoteEvent")
+									        local fireServerMethod = dummyRemote.FireServer
+									        local interceptFireServer = function(remote, ...)
+									            if not directParryState.Remote
+									                and typeof(remote) == "Instance"
+									                and select("#", ...) == 8
+									                and select(2, ...) == directParryState.Cipher
+									                and typeof(select(5, ...)) == "CFrame" then
+									                directParryState.Remote = remote
+									            end
+									            return directParryState.OriginalFireServer(remote, ...)
+									        end
+									        if type(newcclosure) == "function" then
+									            interceptFireServer = newcclosure(interceptFireServer)
+									        end
+									        local hooked, originalFireServer = pcall(hookfunction, fireServerMethod, interceptFireServer)
+									        if hooked and type(originalFireServer) == "function" then
+									            directParryState.OriginalFireServer = originalFireServer
+									            directParryState.HookInstalled = true
+									        end
+									    end
+
+									    local function refreshDirectAimCache()
+									        local now = os.clock()
+									        if now - directParryState.LastRefresh < 0.016 then return true end
+									        local camera = workspace.CurrentCamera
+									        if not camera then return false end
+									        directParryState.LastRefresh = now
+									        table.clear(directParryState.Screen)
+									        local alive = workspace:FindFirstChild("Alive")
+									        if alive then
+									            for _, character in ipairs(alive:GetChildren()) do
+									                if character ~= localPlayer.Character then
+									                    local root = character:FindFirstChild("HumanoidRootPart")
+									                    if root then
+									                        local point, onScreen = camera:WorldToScreenPoint(root.Position)
+									                        if onScreen then directParryState.Screen[tostring(character)] = point end
+									                    end
+									                end
+									            end
+									        end
+									        local viewport = camera.ViewportSize
+									        directParryState.Aim[1] = viewport.X / 2
+									        directParryState.Aim[2] = viewport.Y / 2
+									        return true
+									    end
+
+									    local function encodeDirectTimestamp()
+									        local keyBytes = directParryState.KeyBytes
+									        local keyLength = directParryState.KeyLength
+									        if not keyBytes or not keyLength or keyLength < 1 then return nil end
+									        local timestamp = tostring(math.floor(workspace:GetServerTimeNow() * 100))
+									        local encoded = table.create(#timestamp)
+									        for index = 1, #timestamp do
+									            local value = (string.byte(timestamp, index) + index) % 256
+									            encoded[index] = string.char(bit32.bxor(value, keyBytes[(index - 1) % keyLength + 1]))
+									        end
+									        return table.concat(encoded, "", 1, #timestamp)
+									    end
+
+									    directParryState.Send = function(targetCFrame)
+									        if not directParryState.Ready
+									            or not directParryState.HookInstalled
+									            or not directParryState.Remote
+									            or not directParryState.OriginalFireServer
+									            or typeof(targetCFrame) ~= "CFrame" then
+									            return false
+									        end
+									        if not refreshDirectAimCache() then return false end
+									        local timestamp = encodeDirectTimestamp()
+									        if not timestamp then return false end
+									        local sent = pcall(
+									            directParryState.OriginalFireServer,
+									            directParryState.Remote,
+									            directParryState.Transform,
+									            directParryState.Cipher,
+									            timestamp,
+									            0.025,
+									            targetCFrame,
+									            directParryState.Screen,
+									            directParryState.Aim,
+									            false
+									        )
+									        return sent
+									    end
+									end
+
 									tbl25.LoadParry = function()
-										local Players = game:GetService("CollectionService")
-										local lines = {}
-										local sourceTable = { 0, 0 }
-										local players = { 1.5, 1.25, 1, 0.75, 0.625 }
-										local HttpService = require(replicatedStorage.ServerInfo)
-										local bit = require(replicatedStorage.Shared.UniverseIds)
-										local cell = not HttpService.isDungeonsMatchServer() and game.PlaceId ~= bit.RankedMatches.PlaceId and game.PlaceId ~= bit.RankedMatchesNoAbility.PlaceId and not HttpService.isMedalServer() and not HttpService.isClanWarServer() and not HttpService.isTournamentMatchServer()
-										local fileHandle
+									    local Players = game:GetService("CollectionService")
+									    local lines = {}
+									    local sourceTable = { 0, 0 }
+									    local players = { 1.5, 1.25, 1, 0.75, 0.625 }
+									    local HttpService = require(replicatedStorage.ServerInfo)
+									    local bit = require(replicatedStorage.Shared.UniverseIds)
+									    local cell = not HttpService.isDungeonsMatchServer() and game.PlaceId ~= bit.RankedMatches.PlaceId and game.PlaceId ~= bit.RankedMatchesNoAbility.PlaceId and not HttpService.isMedalServer() and not HttpService.isClanWarServer() and not HttpService.isTournamentMatchServer()
+									    local fileHandle
 
-										if cell then
-											local radians = stack[200]
-											fileHandle = require(replicatedStorage.Common.Utils).FFlag.GetInstantFFlag("NoobParryEnabled", radians)
-										else
-											fileHandle = cell
-										end
+									    if cell then
+									        local radians = stack[200]
+									        fileHandle = require(replicatedStorage.Common.Utils).FFlag.GetInstantFFlag("NoobParryEnabled", radians)
+									    else
+									        fileHandle = cell
+									    end
 
-											local parry_signal = require(replicatedStorage.Packages.Signal).new()
-											parry_signal:Connect(require(replicatedStorage.Controllers["SwordsController \12"].PRY))
-											local steering = parry_signal
+									    local parry_signal = require(replicatedStorage.Packages.Signal).new()
+									    parry_signal:Connect(require(replicatedStorage.Controllers["SwordsController \12"].PRY))
+									    pcall(larpBBState.SetupDirectParry, require(replicatedStorage.Controllers["SwordsController \12"].PRY))
+									    local steering = parry_signal
 
-										local function handlePlayerRemoving()
-											return nil, {}
-										end
+									    local function handlePlayerRemoving()
+									        return nil, {}
+									    end
 
-										local radians, angleRadians = handlePlayerRemoving()
-										local track = nil
-										local vertexCount = nil
-										local result58 = nil
-										local sorted = {}
-										local active = identifyexecutor() == "Volt"
-										local major = nil
-										local byte = nil
-										local result68 = newcclosure
-
-                                        --[[
-										local ReplicatedStorage = game:GetService("ReplicatedStorage")
-										local array = {
-											Parry_Remote = nil,
-											Parry_Hash = nil,
-											Parry_Key = nil,
-											Token = nil,
-											Time_Encoder = nil,
-										}
-
-										local record = ReplicatedStorage.Controllers["SwordsController \012"]
-										local source = require(record:WaitForChild("PRY"))
-										local matrix = debug.getupvalues(source)
-
-										array.Time_Encoder = matrix[4]
-										array.Parry_Hash = matrix[8]
-										array.Parry_Key = matrix[3][3]
-
-                                        
-										if not array.Parry_Remote then
-											local sum
-											sum = hookfunction(Instance.new("RemoteEvent").FireServer, function(player13, ...)
-												local result = { ... }
-
-												if player13 and typeof(player13) == "Instance" and player13:IsA("RemoteEvent") and result[1] == array.Parry_Hash then
-													if not array.Parry_Remote then
-														array.Parry_Remote = player13
-													end
-												end
-
-												return sum(player13, ...)
-											end)
-										end
-                                        ]]
+									    local radians, angleRadians = handlePlayerRemoving()
+									    local track = nil
+									    local vertexCount = nil
+									    local result58 = nil
+									    local sorted = {}
+									    local active = identifyexecutor() == "Volt"
+									    local major = nil
+									    local byte = nil
+									    local result68 = newcclosure
 
 											local cachedTiming, cachedTimingAt = nil, 0
 
@@ -8542,7 +8762,7 @@ Listener.Observe = ObserveDevice
 														bestPair = npcModel.Parent
 
 														if bestPair then
-															bestPair = (npcModel:GetAttribute(stack[138]) or stack[18]) > 0
+															bestPair = ((stack[138] ~= nil and npcModel:GetAttribute(stack[138])) or stack[18]) > 0
 														end
 													end
 												else
@@ -8593,7 +8813,7 @@ Listener.Observe = ObserveDevice
 											return neighbors
 										end
 
-											tbl25.Parry.Fire = function(line, object, descendant, radius)
+											tbl25.Parry.Fire = function(line, object, descendant, radius, useDirectSender)
 												local model = localPlayer.Character
 												if model and continuation(model) then
 													return false
@@ -8608,7 +8828,6 @@ Listener.Observe = ObserveDevice
 												if tbl25.Target and tbl25.Target.GetData then
 													targetCFrame, targetList, targetCoords = tbl25.Target.GetData()
 												end
-
 												if userInputService.TouchEnabled then
 													parryTiming = 0.5
 												end
@@ -8632,11 +8851,28 @@ Listener.Observe = ObserveDevice
 													parryFrame = line or tbl25.Curve.GetCFrame(screenPoint, parryCoordinates)
 												end
 
+												-- Usa a orientação Backwards no envio final, mantendo o alvo/coords selecionados para a curva voltar ao oponente.
+												if tbl20.SelectedParryType == "Backwards" then
+													parryFrame = tbl25.Curve.GetCFrame()
+												end
+
 												if vertexCount then
 													heartbeatUpdate(radius, parryTiming, parryFrame, parryTarget, parryCoordinates)
 													return true
 												end
 
+												local directParryState = larpBBState.DirectParry
+												if useDirectSender and directParryState and directParryState.Ready and directParryState.HookInstalled and directParryState.Remote then
+												    for sendIndex = 1, radius do
+												        if not directParryState.Send(parryFrame) then
+												            for fallbackIndex = sendIndex, radius do
+												                parry_signal:Fire(parryTiming, parryFrame, parryTarget, parryCoordinates, stack[101])
+												            end
+												            return true
+												        end
+												    end
+												    return true
+												end
 												for k = 1, radius do
 													parry_signal:Fire(parryTiming, parryFrame, parryTarget, parryCoordinates, stack[101])
 
@@ -8993,14 +9229,22 @@ Listener.Observe = ObserveDevice
 									-- Anim Fix (estilo message): flags Busy/Recent + cooldown de 0.3s
 									-- Otimizado para a troca de parries: Succeeded virou timestamp (sem criar task por sucesso)
 									-- e o "libera/reinicia animacao" no sucesso e limitado a 1 a cada 0.15s.
-									tbl25.Animation.Fix = { Busy = false, Recent = false, SucceededAt = -1, LastBypassAt = 0, Force = false }
+									tbl25.Animation.Fix = { Busy = false, Recent = false, SucceededAt = -1, LastBypassAt = 0, Force = false, Generation = 0, LastPlayAt = 0 }
 
-									local function finishAnimFix()
+									local function finishAnimFix(generation)
 										local fix = tbl25.Animation.Fix
+										if generation ~= fix.Generation then
+											return
+										end
 										fix.Busy = false
-										task.wait(0.3)
-										if os.clock() - fix.SucceededAt > 0.3 then
-											fix.Recent = false
+										while generation == fix.Generation do
+											local lastActivityAt = math.max(fix.LastPlayAt or 0, fix.SucceededAt or 0)
+											local remaining = 0.3 - (os.clock() - lastActivityAt)
+											if remaining <= 0 then
+												fix.Recent = false
+												return
+											end
+											task.wait(remaining)
 										end
 									end
 
@@ -9024,8 +9268,10 @@ Listener.Observe = ObserveDevice
 											difference = os.clock()
 											cell = false
 											fix.Force = false
+											fix.Generation += 1
+											fix.LastPlayAt = difference
 											fix.Recent, fix.Busy = true, true
-											task.delay(0, finishAnimFix)
+											task.delay(0, finishAnimFix, fix.Generation)
 											local ok, played = pcall(tbl25.Animation.ParryAnimation)
 											return ok and played or false
 										end
@@ -9036,7 +9282,9 @@ Listener.Observe = ObserveDevice
 
 										fix.Recent, fix.Busy = true, true
 										difference = os.clock()
-										task.delay(0, finishAnimFix)
+										fix.Generation += 1
+										fix.LastPlayAt = difference
+										task.delay(0, finishAnimFix, fix.Generation)
 										local ok, played = pcall(tbl25.Animation.ParryAnimation)
 										return ok and played or false
 									end
@@ -9212,150 +9460,81 @@ Listener.Observe = ObserveDevice
 									coroutineBody({ BallStatsEnabled = false })
 									tbl25.BallStats = {}
 
-									tbl25.BallStats.CreatePanel = function(line, value4, object)
-										local jsonString = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
-										local result17 = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-										local userInterface = Instance.new("ScreenGui")
-										userInterface.Name = "tungtungtungsahur" .. object
-										userInterface.ResetOnSpawn = stack[101]
-										userInterface.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-										userInterface.IgnoreGuiInset = true
-										parentGui(userInterface)
-										local RemoteEvent = Instance.new("CanvasGroup")
-										RemoteEvent.Name = "StatsGroup"
-										RemoteEvent.BackgroundTransparency = 1
-										RemoteEvent.Position = UDim2.new(stack[33], line, 0, 150)
-										RemoteEvent.Size = UDim2.new(0, 210, stack[33], 96)
-										RemoteEvent.GroupTransparency = stack[18]
-										RemoteEvent.Parent = userInterface
-										local panel = Instance.new("UIScale")
-										panel.Name = "StatsScale"
-										panel.Scale = stack[198] * 0.9
-										panel.Parent = RemoteEvent
-										local mainFrame = Instance.new("Frame")
-										mainFrame.Name = "brobinipizanini"
-										mainFrame.BackgroundColor3 = colors.Primary
-										mainFrame.BorderSizePixel = stack[33]
-										mainFrame.Position = UDim2.new(0, 0, 0, 0)
-										mainFrame.Size = UDim2.new(1, 0, 1, stack[33])
-										mainFrame.Parent = RemoteEvent
-										local containerFrame = Instance.new("TextButton")
-										containerFrame.Name = "clickblocker"
-										containerFrame.Text = ""
-										containerFrame.AutoButtonColor = false
-										containerFrame.BackgroundTransparency = 1
-										containerFrame.BorderSizePixel = 0
-										containerFrame.Size = UDim2.new(1, stack[33], 1, stack[33])
-										containerFrame.ZIndex = stack[33]
-										containerFrame.Parent = mainFrame
-										local corner = Instance.new("UICorner")
-										corner.CornerRadius = UDim.new(0, 11)
-										corner.Parent = mainFrame
-										local stepPart = Instance.new("UIStroke")
-										stepPart.Color = colors.BorderSoft
-										stepPart.Parent = mainFrame
-										local container = Instance.new(stack[21])
-										local controller = ColorSequence.new
-										local lines = {}
-										local radians = ColorSequenceKeypoint.new(0, colors.Text)
-										local angleRadians = ColorSequenceKeypoint.new(0.493, colors.AccentLight)
-										local track = ColorSequenceKeypoint.new(0.509, colors.AccentLight)
-										local instance4 = ColorSequenceKeypoint.new
-										local content = colors.Text
-										lines[1] = radians
-										lines[2] = angleRadians
-										lines[3] = track
+																																						tbl25.BallStats.CreatePanel = function(line, value4, object)
+																			    local regularFont = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal)
+																			    local boldFont = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+																			    local userInterface = Instance.new("ScreenGui")
+																			    userInterface.Name = "BallStatsText_" .. tostring(object or "Main")
+																			    userInterface.ResetOnSpawn = stack[101]
+																			    userInterface.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+																			    userInterface.IgnoreGuiInset = true
+																			    parentGui(userInterface)
 
-										do
-											local argumentPack = table.pack(instance4(1, content))
-											table.move(argumentPack, 1, argumentPack.n, 4, lines)
-										end
+																			    local group = Instance.new("CanvasGroup")
+																			    group.Name = "BallStatsTextGroup"
+																			    group.BackgroundTransparency = 1
+																			    group.Position = UDim2.new(0, line, 0, 150)
+																			    group.Size = UDim2.new(0, 240, 0, 48)
+																			    group.GroupTransparency = stack[18]
+																			    group.Parent = userInterface
 
-										container.Color = controller(lines)
-										container.Rotation = 260
-										container.Parent = stepPart
-										local nameLabel = Instance.new("TextLabel")
-										nameLabel.Name = "v0rtexdisgay"
-										nameLabel.FontFace = jsonString
-										nameLabel.Text = value4
-										nameLabel.TextColor3 = colors.Text
-										nameLabel.TextSize = 15
-										nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-										nameLabel.BackgroundTransparency = stack[18]
-										nameLabel.BorderSizePixel = stack[33]
-										nameLabel.Position = UDim2.new(stack[33], 12, stack[33], 8)
-										nameLabel.Size = UDim2.new(1, -stack[79], 0, 16)
-										nameLabel.Parent = mainFrame
-										local imageLabel = Instance.new("Frame")
-										imageLabel.Name = "divider"
-										imageLabel.BackgroundColor3 = colors.BorderSoft
-										imageLabel.BorderSizePixel = stack[33]
-										imageLabel.Position = UDim2.new(0, stack[115], 0, 32)
-										imageLabel.Size = UDim2.new(1, -20, 0, 1)
-										imageLabel.Parent = mainFrame
-										local textBox = Instance.new("TextLabel")
-										textBox.Name = "veloc1"
-										textBox.FontFace = jsonString
-										textBox.Text = "velocity"
-										textBox.TextColor3 = colors.SubText
-										textBox.TextSize = 14
-										textBox.TextXAlignment = Enum.TextXAlignment.Left
-										textBox.BackgroundTransparency = 1
-										textBox.BorderSizePixel = stack[33]
-										textBox.Position = UDim2.new(0, 12, stack[33], 40)
-										textBox.Size = UDim2.new(0, 100, stack[33], 18)
-										textBox.Parent = mainFrame
-										local messageLabel = Instance.new(stack[65])
-										messageLabel.Name = "velocplace"
-										messageLabel.FontFace = result17
-										messageLabel.Text = "0.0"
-										messageLabel.TextColor3 = colors.Text
-										messageLabel.TextSize = 14
-										messageLabel.TextXAlignment = Enum.TextXAlignment.Right
-										messageLabel.BackgroundTransparency = 1
-										messageLabel.BorderSizePixel = 0
-										messageLabel.Position = UDim2.new(1, -112, stack[33], stack[78])
-										messageLabel.Size = UDim2.new(0, 100, 0, 18)
-										messageLabel.Parent = mainFrame
-										local closeButton = Instance.new("TextLabel")
-										closeButton.Name = "velocpeaktext"
-										closeButton.FontFace = jsonString
-										closeButton.Text = "peak"
-										closeButton.TextColor3 = colors.SubText
-										closeButton.TextSize = stack[46]
-										closeButton.TextXAlignment = Enum.TextXAlignment.Left
-										closeButton.BackgroundTransparency = 1
-										closeButton.BorderSizePixel = 0
-										closeButton.Position = UDim2.new(0, 12, 0, 64)
-										closeButton.Size = UDim2.new(0, 120, 0, 18)
-										closeButton.Parent = mainFrame
-										local submitButton = Instance.new("TextLabel")
-										submitButton.Name = "peakvaluetext"
-										submitButton.FontFace = result17
-										submitButton.Text = "0.0"
-										submitButton.TextColor3 = colors.Text
-										submitButton.TextSize = stack[46]
-										submitButton.TextXAlignment = Enum.TextXAlignment.Right
-										submitButton.BackgroundTransparency = 1
-										submitButton.BorderSizePixel = stack[33]
-										submitButton.Position = UDim2.new(1, -112, 0, 64)
-										submitButton.Size = UDim2.new(stack[33], stack[158], 0, 18)
-										submitButton.Parent = mainFrame
-										containerFrame.ZIndex = 10
-										v99(RemoteEvent, containerFrame)
+																			    local scale = Instance.new("UIScale")
+																			    scale.Name = "StatsScale"
+																			    scale.Scale = stack[198] * 0.9
+																			    scale.Parent = group
 
-										return {
-											Gui = userInterface,
-											Group = RemoteEvent,
-											Title = nameLabel,
-											Velocity = messageLabel,
-											Peak = submitButton,
-											DisplayVelocity = 0,
-											DisplayPeak = 0,
-										}
-									end
+																			    local textLayer = Instance.new("Frame")
+																			    textLayer.Name = "BallStatsTextLayer"
+																			    textLayer.BackgroundTransparency = 1
+																			    textLayer.BorderSizePixel = 0
+																			    textLayer.Size = UDim2.new(1, 0, 1, 0)
+																			    textLayer.Parent = group
 
-									local function handlePlayerRemoving(line, object)
+																			    local function makeText(name, text, font, size, x, y, width, alignment)
+																			        local label = Instance.new("TextLabel")
+																			        label.Name = name
+																			        label.FontFace = font
+																			        label.Text = text
+																			        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+																			        label.TextSize = size
+																			        label.TextXAlignment = alignment
+																			        label.BackgroundTransparency = 1
+																			        label.BorderSizePixel = 0
+																			        label.Position = UDim2.new(0, x, 0, y)
+																			        label.Size = UDim2.new(0, width, 0, 20)
+																			        label.ZIndex = 2
+																			        label.Parent = textLayer
+																			        return label
+																			    end
+
+																			    local currentLabel = makeText("CurrentSpeedLabel", "current speed", regularFont, 13, 0, 2, 130, Enum.TextXAlignment.Left)
+																			    local currentValue = makeText("CurrentSpeedValue", "0.0", boldFont, 15, 137, 2, 96, Enum.TextXAlignment.Right)
+																			    local peakLabel = makeText("SessionPeakLabel", "session peak", regularFont, 13, 0, 25, 130, Enum.TextXAlignment.Left)
+																			    local peakValue = makeText("SessionPeakValue", "0.0", boldFont, 15, 137, 25, 96, Enum.TextXAlignment.Right)
+
+																			    local clickBlocker = Instance.new("TextButton")
+																			    clickBlocker.Name = "clickblocker"
+																			    clickBlocker.Text = ""
+																			    clickBlocker.AutoButtonColor = false
+																			    clickBlocker.BackgroundTransparency = 1
+																			    clickBlocker.BorderSizePixel = 0
+																			    clickBlocker.Size = UDim2.new(1, 0, 1, 0)
+																			    clickBlocker.ZIndex = 10
+																			    clickBlocker.Parent = textLayer
+																			    v99(group, clickBlocker)
+
+																			    return {
+																			        Gui = userInterface,
+																			        Group = group,
+																			        Title = currentLabel,
+																			        Velocity = currentValue,
+																			        Peak = peakValue,
+																			        DisplayVelocity = 0,
+																			        DisplayPeak = 0,
+																			    }
+																			end
+
+local function handlePlayerRemoving(line, object)
 										local player3 = line.Group
 										local result51 = player3 and player3:FindFirstChild("StatsScale")
 										local difference = object and 0 or 1
@@ -9475,27 +9654,9 @@ Listener.Observe = ObserveDevice
 											end
 
 											if not larpBBState.StatsBall then
-												local angleRadians = tbl25.Ball.GetMainBall(true)
-												local sourceTable = {}
-
-												for _, propertyName in radians, nil, nil do
-													if not larpBBState.ExtraStats[propertyName] then
-														table.insert(sourceTable, propertyName)
-													end
-												end
-
-												local player19 = angleRadians and not larpBBState.ExtraStats[angleRadians] and angleRadians or sourceTable[stack[18]]
-
+												local player19 = tbl25.Ball.GetMainBall(true)
 												if player19 then
 													larpBBState.StatsBall = player19
-												end
-											end
-
-											for _, existingPlayer in radians, nil, nil do
-												if existingPlayer ~= larpBBState.StatsBall and not larpBBState.ExtraStats[existingPlayer] then
-													larpBBState.ExtraStats[existingPlayer] = tbl25.BallStats.CreatePanel(20, "ball stats", tostring(existingPlayer:GetDebugId(0)))
-													handlePlayerRemoving(larpBBState.ExtraStats[existingPlayer], true)
-													larpBBState.ExtraStats[existingPlayer].PeakValue = 0
 												end
 											end
 
@@ -9530,47 +9691,6 @@ Listener.Observe = ObserveDevice
 											bodyVelocity.DisplayPeak = bodyVelocity.DisplayPeak + (difference - bodyVelocity.DisplayPeak) * 0.15
 											bodyVelocity.Velocity.Text = string.format("%.1f", bodyVelocity.DisplayVelocity)
 											bodyVelocity.Peak.Text = string.format("%.1f", bodyVelocity.DisplayPeak)
-											local step = 0
-
-											for _, existingPlayer in radians, nil, nil do
-												if existingPlayer ~= player19 and larpBBState.ExtraStats[existingPlayer] then
-													step += 1
-													local track = larpBBState.ExtraStats[existingPlayer]
-													track.Title.Text = "ball stats #" .. step
-													local index30 = stack[108] + step * 222
-
-													if track.LastTargetX ~= index30 then
-														track.LastTargetX = index30
-														v101(track.Group, { Position = UDim2.new(stack[33], index30, 0, 150) }, 0.3)
-													end
-
-													local exponent = stack[33]
-													local v = track.DisplayPeak or 0
-													local vertexCount = index7(existingPlayer)
-													local linearVelocity = vertexCount.Zoomies
-
-													if not linearVelocity or linearVelocity.Parent ~= existingPlayer then
-														local result79 = existingPlayer:FindFirstChild("zoomies")
-														vertexCount.Zoomies = result79
-														linearVelocity = result79
-													end
-
-													if linearVelocity then
-														exponent = linearVelocity.VectorVelocity.Magnitude
-
-														if (track.PeakValue or 0) < exponent then
-															track.PeakValue = exponent
-														end
-
-														v = track.PeakValue or 0
-													end
-
-													track.DisplayVelocity = track.DisplayVelocity + (exponent - track.DisplayVelocity) * stack[110]
-													track.DisplayPeak = track.DisplayPeak + (v - track.DisplayPeak) * stack[110]
-													track.Velocity.Text = string.format("%.1f", track.DisplayVelocity)
-													track.Peak.Text = string.format("%.1f", track.DisplayPeak)
-												end
-											end
 										end)
 									end
 
@@ -9827,12 +9947,14 @@ Listener.Observe = ObserveDevice
 										ManualSpamEnabled = false,
 										ManualSpamType = "Remote",
 										ManualSpamAnimFix = true,
+										ManualSpamCPS = 60,
 									})
 
 									tbl25.Loop = {}
 
 									tbl25.Loop.InvisDetection = function(line)
 										smallest = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+										if not smallest then return stack[101] end
 										local cell = stack[101]
 
 										for _, particle in smallest:GetChildren() do
@@ -9845,6 +9967,316 @@ Listener.Observe = ObserveDevice
 										end
 
 										return cell
+									end
+
+									-- (guardado em tbl25.Loop para nao criar novos locals: limite de 200 locals por funcao do Luau)
+									-- Compensacao de ping alto: so age com ping >= 100ms (devolve 0 abaixo disso, entao o autoparry de ping baixo
+									-- nao muda). Devolve segundos extras de antecedencia (o parry demora mais para chegar ao servidor).
+									tbl25.Loop.HighPingLead = function(pingSeconds)
+										local ms = (pingSeconds or 0) * 1000
+										if ms < 100 then
+											return 0
+										end
+										return math.min(0.03 + (ms - 100) / 1000 * 0.4, 0.12)
+									end
+
+									-- Bola reta: se a direcao da bola nao mudou por >= 0.12s (e nao ha curva medida), o parry sai um pouco
+									-- antes (StraightLead s), porque em linha reta nao ha motivo para esperar e o parry tardio mata.
+									-- Devolve 0 quando ha qualquer curva, entao curvas e ping alto nao mudam.
+									tbl25.Loop.StraightLead = function(state, velocity, now)
+										local magnitude = velocity.Magnitude
+										if magnitude < 1 then
+											state.StrSince = nil
+											state.StrDir = nil
+											return 0
+										end
+										local dir = velocity / magnitude
+										if not state.StrDir or not state.StrAt then
+											state.StrDir, state.StrAt, state.StrSince = dir, now, now
+										elseif now - state.StrAt >= 0.03 then
+											if state.StrDir:Dot(dir) < 0.9997 then
+												state.StrSince = now
+											end
+											state.StrDir, state.StrAt = dir, now
+										end
+										local cfg = tbl25.Loop.SlowBall
+										if state.CurveRateAt and now - state.CurveRateAt <= 0.35 and (state.CurveRate or 0) >= cfg.CurveRate then
+											return 0
+										end
+										if now - (state.StrSince or now) >= 0.12 then
+											return cfg.StraightLead
+										end
+										return 0
+									end
+
+									tbl25.Loop.SlowBall = {
+										StraightLead = 0.035, -- s: antecedencia extra para bola reta (so bola sem curva)
+										Speed = 140,        -- abaixo disso a bola e considerada lenta
+										MaxLead = 0.42,     -- tempo maximo (s) ate o centro do jogador; o parry dura ~0.5s
+										Lead = 0.12,         -- s antes do impacto (alem de PingShare*ping) em que o parry de bola lenta deve sair
+										PingShare = 0.5,     -- fracao do ping somada a antecedencia
+										SureMargin = 0.06,   -- s: prazo de seguranca (alem de PingShare*ping); nunca segura alem disso
+										CenterRadius = 1.5,  -- studs: raio usado na previsao de curva (impacto no centro do jogador)
+										Horizon = 0.8,       -- s: ate onde a previsao de curva olha
+										CurveSafetySpeed = 220, -- abaixo disso, em curva, o parry sai no maximo no "prazo de seguranca" (ver sureArrival)
+										SpamMinSpeed = 100, -- o auto spam so atua com a bola nessa velocidade ou mais (studs/s)
+										MinDist = 12,       -- bola reta dentro dessa distancia: o parry sempre pode sair
+										CurveRate = 0.6,    -- rad/s: giro da velocidade a partir do qual a bola esta em curva
+										HitRadius = 8,      -- studs: raio em que a bola e considerada "chegando" no jogador
+										Horizon = 0.8,      -- s: ate onde a previsao da trajetoria curva olha
+										CurveMinDist = 6,   -- studs: em curva, abaixo disso o parry sai de qualquer jeito
+										CurveMinTti = 0.12, -- s: em curva, abaixo disso o parry sai de qualquer jeito
+									}
+
+									-- Mede o giro da velocidade da bola (eixo + rad/s) a partir das amostras replicadas.
+									tbl25.Loop.TrackCurve = function(state, velocity, now)
+										local previous = state.CurvePrevVelocity
+										if not previous then
+											state.CurvePrevVelocity = velocity
+											state.CurvePrevTime = now
+											return
+										end
+										if (velocity - previous).Magnitude <= math.max(velocity.Magnitude, 1) * 0.004 then
+											return
+										end
+										local dt = now - (state.CurvePrevTime or now)
+										local fromMag, toMag = previous.Magnitude, velocity.Magnitude
+										if dt > 0.001 and fromMag > 0.001 and toMag > 0.001 then
+											local fromDir, toDir = previous / fromMag, velocity / toMag
+											local angle = math.acos(math.clamp(fromDir:Dot(toDir), -1, 1))
+											local axis = fromDir:Cross(toDir)
+											if axis.Magnitude > 1e-4 and angle > 1e-3 then
+												local rate = math.min(angle / dt, 12)
+												if state.CurveRateAt and now - state.CurveRateAt <= 0.35 and state.CurveRate then
+													rate = state.CurveRate * 0.5 + rate * 0.5
+												end
+												state.CurveRate = rate
+												state.CurveAxis = axis.Unit
+												state.CurveRateAt = now
+											end
+										end
+										state.CurvePrevVelocity = velocity
+										state.CurvePrevTime = now
+									end
+
+									-- Simula a trajetoria da bola girando com taxa constante e devolve (tempo ate entrar no raio do
+									-- jogador, menor distancia). math.huge = nao chega dentro do horizonte.
+									tbl25.Loop.PredictImpact = function(ballPos, velocity, axis, rate, playerPos, radius, horizon)
+										local step = 0.02
+										local rotation = axis and rate and rate > 0 and CFrame.fromAxisAngle(axis, rate * step) or nil
+										local pos, vel, t = ballPos, velocity, 0
+										local best = math.huge
+										while t < horizon do
+											local segment = vel * step
+											local lengthSq = segment:Dot(segment)
+											local u = lengthSq > 1e-6 and math.clamp((playerPos - pos):Dot(segment) / lengthSq, 0, 1) or 0
+											local distance = (pos + segment * u - playerPos).Magnitude
+											if distance <= radius then
+												return t + u * step, distance
+											end
+											best = math.min(best, distance)
+											pos = pos + segment
+											if rotation then
+												vel = rotation:VectorToWorldSpace(vel)
+											end
+											t += step
+										end
+										return math.huge, best
+									end
+
+									-- Bola que voltou depois do nosso parry (rebatida) sem o atributo "target" ter sido visto mudando (o
+									-- replicado pode agrupar A->B->A no mesmo pacote): rearma o parry. So rearma com prova de rebatida:
+									--  * ela se afastou e agora a velocidade INVERTEU em relacao a fase de afastamento (vale para qualquer
+									--    velocidade; oscilacao de posicao de perto nao inverte a velocidade), ou
+									--  * (so bola rapida) a velocidade subiu >=15% E a direcao girou >=25 graus desde o parry. Acelerar em
+									--    linha reta (bola ganhando velocidade) nao conta.
+									tbl25.Loop.RearmOnReturn = function(ball, state, position)
+										if not ball or not state or typeof(position) ~= "Vector3" then
+											return false
+										end
+										local origin = redoFunction(ball) or unexecuteFunction(ball)
+										local velocity = state.Zoomies and state.Zoomies.VectorVelocity or index4(ball)
+										if typeof(origin) ~= "Vector3" or typeof(velocity) ~= "Vector3" then
+											return false
+										end
+										local speed = velocity.Magnitude
+										local offset = position - origin
+										if not state.Parried or speed < 1 then
+											state.RearmAwayVelocity = nil
+											state.RearmRefVelocity = nil
+											state.RearmRefAt = nil
+											state.ApproachClosing = nil
+											return false
+										end
+										-- Depois de um parry rapido, nao rearma a mesma bola enquanto ela continuar
+										-- atribuida a nos; isso evita um segundo disparo por variacao de velocidade/direcao.
+										if state.HighSpeedParryLock or speed >= tbl25.Loop.SlowBall.Speed then
+											state.HighSpeedParryLock = true
+											return false
+										end
+										if offset.Magnitude < 0.5 then
+											state.RearmAwayVelocity = nil
+											state.RearmRefVelocity = nil
+											state.RearmRefAt = nil
+											state.ApproachClosing = nil
+											return false
+										end
+										local closing = offset:Dot(velocity) > 0
+										local now = os.clock()
+										if not state.RearmRefVelocity then
+											state.RearmRefVelocity = velocity
+											state.RearmRefAt = now
+										end
+										local rearm = false
+										if closing then
+											local away = state.RearmAwayVelocity
+											if state.ApproachClosing == false and away and away.Unit:Dot(velocity.Unit) < -0.2 then
+												rearm = true
+											elseif speed >= tbl25.Loop.SlowBall.Speed and now - state.RearmRefAt >= 0.05 then
+												local ref = state.RearmRefVelocity
+												if speed >= ref.Magnitude * 1.15 and ref.Unit:Dot(velocity.Unit) < 0.906 then
+													rearm = true
+												end
+											end
+										else
+											state.RearmAwayVelocity = velocity
+										end
+										state.ApproachClosing = closing
+										if rearm then
+											state.Parried = false
+											state.ParryResetAt = 0
+											state.RearmAwayVelocity = nil
+											state.RearmRefVelocity = nil
+											state.RearmRefAt = nil
+											if currentDate == ball then
+												top = false
+												currentDate = nil
+												elapsedTime = 0
+											end
+											return true
+										end
+										return false
+									end
+
+									-- Tempo ate a bola chegar medido pela aproximacao REAL (distancia x tempo nos ultimos ~0.25s), o que ja
+									-- inclui qualquer curva. A taxa e corrigida pela aceleracao (bola ganhando velocidade nao e curva).
+									-- nil = historico curto; math.huge = nao esta se aproximando.
+									tbl25.Loop.ClosingTime = function(state, distance, now, speed)
+										local history = state.DistHistory
+										if not history then
+											history = {}
+											state.DistHistory = history
+										end
+										local last = history[#history]
+										if not last or now - last[1] >= 0.016 then
+											last = { now, distance, speed }
+											history[#history + 1] = last
+										end
+										while #history > 1 and now - history[1][1] > 0.25 do
+											table.remove(history, 1)
+										end
+										local first = history[1]
+										local span = last[1] - first[1]
+										if span < 0.1 then
+											return nil
+										end
+										local rate = (first[2] - last[2]) / span
+										if rate <= 1 then
+											return math.huge
+										end
+										local total, count = 0, 0
+										for _, sample in history do
+											total += sample[3]
+											count += 1
+										end
+										local average = total / count
+										if average > 1 and speed > average then
+											rate *= speed / average
+										end
+										return last[2] / rate
+									end
+
+									-- Bola lenta: o parry sai so quando o impacto estimado esta perto (como um jogador de verdade: ~0.1-0.2s
+									-- antes do contato). A estimativa usa a aproximacao real medida (inclui curva), corrigida pela aceleracao,
+									-- e a previsao de trajetoria girando quando ha curva. Antes disso espera; no prazo de seguranca nunca segura.
+									tbl25.Loop.SlowTiming = function(state, distance, speed, straightTti, pingSeconds, now, ballPos, velocity, playerPos)
+										local cfg = tbl25.Loop.SlowBall
+										local safeSpeed = math.max(speed, 1)
+										-- A bola acerta/e rebatida ao tocar o hitbox (HitRadius do centro), nao no centro do jogador.
+										local contact = cfg.HitRadius / safeSpeed
+										tbl25.Loop.TrackCurve(state, velocity, now)
+										local arrival = tbl25.Loop.ClosingTime(state, distance, now, speed)
+										local curving = state.CurveRateAt and now - state.CurveRateAt <= 0.35 and (state.CurveRate or 0) >= cfg.CurveRate
+										local bent = arrival == math.huge or (arrival ~= nil and straightTti ~= math.huge and arrival > straightTti * 1.3 + 0.03)
+										local estimate = straightTti
+										if bent or curving then
+											if arrival then
+												estimate = arrival
+											end
+										end
+										local hitTime = estimate - contact
+										if curving then
+											local hit = tbl25.Loop.PredictImpact(ballPos, velocity, state.CurveAxis, state.CurveRate, playerPos, cfg.HitRadius, cfg.Horizon)
+											hitTime = math.max(hitTime, hit)
+										end
+										local highLead = tbl25.Loop.HighPingLead(pingSeconds) + (state.StraightBonus or 0)
+										local fireAt = pingSeconds * cfg.PingShare + cfg.Lead + highLead
+										local sure = (distance - cfg.HitRadius) / safeSpeed <= pingSeconds * cfg.PingShare + cfg.SureMargin + highLead
+										return sure or hitTime <= fireAt
+									end
+
+									-- Bola rapida em curva: mesma ideia do SlowTiming, mas so opina quando a curva foi medida
+									-- (devolve nil = sem opiniao, mantem o comportamento atual). Estima o impacto pela aproximacao real
+									-- medida + trajetoria girando e so libera o parry perto do impacto previsto; o prazo de seguranca
+									-- (sureArrival) continua mandando no loop, entao nunca segura alem dele.
+									tbl25.Loop.CurveTiming = function(state, distance, speed, straightTti, pingSeconds, now, ballPos, velocity, playerPos)
+										local cfg = tbl25.Loop.SlowBall
+										tbl25.Loop.TrackCurve(state, velocity, now)
+										local curving = state.CurveRateAt and now - state.CurveRateAt <= 0.35 and (state.CurveRate or 0) >= cfg.CurveRate
+										if not curving then
+											return nil
+										end
+										local safeSpeed = math.max(speed, 1)
+										local arrival = tbl25.Loop.ClosingTime(state, distance, now, speed)
+										local estimate = straightTti
+										if arrival then
+											estimate = arrival
+										end
+										local hitTime = estimate - cfg.HitRadius / safeSpeed
+										local hit = tbl25.Loop.PredictImpact(ballPos, velocity, state.CurveAxis, state.CurveRate, playerPos, cfg.HitRadius, cfg.Horizon)
+										hitTime = math.max(hitTime, hit)
+										return hitTime <= pingSeconds * cfg.PingShare + cfg.Lead + tbl25.Loop.HighPingLead(pingSeconds)
+									end
+
+									-- Partida sem adversario vivo (inimigo eliminado / "NO ONE WON"): nao ha o que parrar.
+									-- So vale depois de ja termos visto um adversario vivo na pasta Alive; assim, se os bots do
+									-- treino ficarem fora dessa pasta, o autoparry continua funcionando normalmente.
+									tbl25.Loop.NoLivingOpponent = function(model, now)
+										local folder = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
+										if not folder or not model then
+											return false
+										end
+										local living = 0
+										for _, other in folder:GetChildren() do
+											if other ~= model then
+												local root = other.PrimaryPart or other:FindFirstChild("HumanoidRootPart")
+												local humanoid = other:FindFirstChildOfClass("Humanoid")
+												if root and (not humanoid or humanoid.Health > 0) then
+													living += 1
+												end
+											end
+										end
+										if living > 0 then
+											larpBBState.OpponentSeenAt = now
+											larpBBState.NoOpponentSince = nil
+											return false
+										end
+										-- So vale logo depois de ter visto um adversario vivo (acabou de morrer). Antes ficava preso em treino
+										-- sozinho/inicio de rodada e o autoparry nao rebatia a primeira bola.
+										if not larpBBState.OpponentSeenAt or now - larpBBState.OpponentSeenAt > 5 then
+											return false
+										end
+										return true
 									end
 
 									tbl25.Loop.MainParryLoop = function(line)
@@ -9865,6 +10297,10 @@ Listener.Observe = ObserveDevice
 										local vehicleRoot = model.PrimaryPart
 										local radians = tbl25.Ball.GetAllBalls()
 										if #radians == 0 then
+											return
+										end
+
+										if tbl25.Loop.NoLivingOpponent(model, osClock) then
 											return
 										end
 
@@ -9892,7 +10328,7 @@ Listener.Observe = ObserveDevice
 										local difference = angleRadians / stack[66]
 										local openError = math.clamp(angleRadians / 10, 10, 16.7)
 										local step = math.clamp(difference * stack[81] - 0.05, 0, 0.04)
-												local clampedY = math.clamp(tonumber(tbl20.ParryRange) or 0, 0, 10)
+												local clampedY = math.clamp(tonumber(tbl20.ParryRange) or 0, 0, 30)
 										local currentPosition = vehicleRoot.Position
 										local targetPlayerName = localPlayer.Name
 										local track, vertexCount = tbl25.Detection.BlocksParry(nil, model, vehicleRoot)
@@ -9917,6 +10353,11 @@ Listener.Observe = ObserveDevice
 
 											if bestLabel then
 												bestLabel = osClock < (major and major.ParryResetAt or 0)
+											end
+
+											-- Bola voltou na nossa direcao (rebatida rapida): libera o parry em vez de esperar 0.6s.
+											if bestLabel and tbl25.Loop.RearmOnReturn(attachment, major, currentPosition) then
+												bestLabel = false
 											end
 
 											if bestLabel then
@@ -10046,6 +10487,10 @@ Listener.Observe = ObserveDevice
 														if ikConstraint.LoopTarget ~= result72 then
 															ikConstraint.Parried = stack[101]
 															ikConstraint.ParryResetAt = 0
+															if result72 ~= targetPlayerName then
+																ikConstraint.HighSpeedParryLock = nil
+																ikConstraint.HighSpeedParryCandidate = nil
+															end
 
 															if ikConstraint.Target ~= result72 then
 																if result72 == targetPlayerName then
@@ -10056,6 +10501,7 @@ Listener.Observe = ObserveDevice
 															end
 
 															ikConstraint.LoopTarget = result72
+															ikConstraint.RallyAt = osClock
 
 															if result72 == targetPlayerName and currentDate == word then
 																top = false
@@ -10064,14 +10510,25 @@ Listener.Observe = ObserveDevice
 															end
 														end
 
+														if result72 == targetPlayerName and not result73 then
+															tbl25.Loop.RearmOnReturn(word, ikConstraint, currentPosition)
+														end
+
 														if result72 ~= targetPlayerName then
 															ikConstraint.Parried = false
-														elseif ikConstraint.Parried then
-															if osClock < (ikConstraint.ParryResetAt or 0) then
-																continue
-															end
-															ikConstraint.Parried = stack[101]
+															elseif ikConstraint.Parried then
+																if osClock < (ikConstraint.ParryResetAt or 0) then
+																	continue
+																end
+																if ikConstraint.HighSpeedParryLock then
+																	continue
+																end
+																ikConstraint.Parried = stack[101]
+															ikConstraint.RandomAccuracyValue = nil
+															ikConstraint.RandomAccuracyMin = nil
+															ikConstraint.RandomAccuracyMax = nil
 														end
+
 
 														local bestChild = packed == word and word or nil
 
@@ -10103,16 +10560,34 @@ Listener.Observe = ObserveDevice
 															local rayOrigin = redoFunction(dotProduct, result74, osClock) or result74 and result74.Position or Vector3.zero
 															local leftChild = currentPosition - rayOrigin
 															local totalTime = leftChild.Magnitude
-															local endPosition = 101 - math.clamp(tonumber(tbl20.ParryAccuracy) or 80, 0, 100)
+															local accuracyValue = math.clamp(tonumber(tbl20.ParryAccuracy) or 0, 0, 100)
+															local endPosition = 46 - accuracyValue * 0.25
 															local ENT = larpBBState.PhantomData
 															local innerPlayer = larpBBState.PhantomTarget
 															innerPlayer = innerPlayer and innerPlayer:FindFirstChild("HumanoidRootPart")
 															local index31 = ENT and ENT.Name == "Phantom" and not ENT.Blatant and ENT.Type == "Spam" and innerPlayer and (currentPosition - innerPlayer.Position).Magnitude
 
 															if tbl20.RandomizedParryAccuracy then
-																local maximumValue = math.clamp(tbl20.RandomAccuracyMin or 1, 1, 100)
-																endPosition = 101 - math.random(maximumValue, math.clamp(tbl20.RandomAccuracyMax or 100, maximumValue, 100))
+																local minimumAccuracy = math.floor(math.clamp(tonumber(tbl20.RandomAccuracyMin) or 1, 1, 100))
+																local maximumAccuracy = math.floor(math.clamp(tonumber(tbl20.RandomAccuracyMax) or 100, minimumAccuracy, 100))
+																if ikConstraint.RandomAccuracyValue == nil or ikConstraint.RandomAccuracyMin ~= minimumAccuracy or ikConstraint.RandomAccuracyMax ~= maximumAccuracy then
+																	ikConstraint.RandomAccuracyMin = minimumAccuracy
+																	ikConstraint.RandomAccuracyMax = maximumAccuracy
+																	ikConstraint.RandomAccuracyValue = math.random(minimumAccuracy, maximumAccuracy)
+																end
+																endPosition = 46 - ikConstraint.RandomAccuracyValue * 0.25
+															else
+																ikConstraint.RandomAccuracyValue = nil
+																ikConstraint.RandomAccuracyMin = nil
+																ikConstraint.RandomAccuracyMax = nil
 															end
+
+															-- Low-ping profile: floor the parry lead to an Accuracy-60 equivalent at <=60 ms.
+															local measuredPingMs = latestPingMs or localPlayer:GetNetworkPing() * 1000
+															if measuredPingMs <= 60 then
+																endPosition = math.max(endPosition, 31)
+															end
+
 
 															if index31 and index31 > 30 then
 																endPosition = 100
@@ -10121,12 +10596,66 @@ Listener.Observe = ObserveDevice
 															end
 
 															-- Limita a janela em um meio-termo: evita antecipacao exagerada em baixa velocidade.
-															endPosition = math.clamp(endPosition, 21, 61)
+															endPosition = math.clamp(endPosition, 21, 46)
 															local isRoblox = not result73
 
-															-- Fallback preditivo apenas para bolas rapidas em aproximacao: estima o tempo ate contato usando velocidade projetada.
-										local fastApproach = graph and not result73 and exponent >= 100 and onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection) <= math.clamp(difference + 1 / 60, 0.025, 0.08)
-										if not (isRoblox and (tbl20.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))) then
+																														-- Fallback preditivo apenas para bolas rapidas em aproximacao: estima o tempo ate contato usando velocidade projetada.
+															if not result73 and result72 == targetPlayerName then
+																ikConstraint.StraightBonus = tbl25.Loop.StraightLead(ikConstraint, moveDirection, osClock)
+															else
+																ikConstraint.StraightBonus = 0
+															end
+															local fastApproachTime = math.clamp(0.1 + difference * 0.05 + math.max(exponent - 100, 0) / 5000, 0.1, 0.22) + tbl25.Loop.HighPingLead(difference) + ikConstraint.StraightBonus
+															local fastApproachDistance = math.clamp(20 + exponent * 0.15, 40, 100) + exponent * (tbl25.Loop.HighPingLead(difference) + ikConstraint.StraightBonus)
+															local speedSquared = moveDirection:Dot(moveDirection)
+															local closestApproachTime = speedSquared > 0.001 and leftChild:Dot(moveDirection) / speedSquared or math.huge
+															local closestApproachDistance = closestApproachTime > 0 and (leftChild - moveDirection * closestApproachTime).Magnitude or math.huge
+															local fastApproachRadius = math.clamp(8 + exponent * 0.035, 12, 30)
+															local fastApproach = graph and not result73 and exponent >= 100 and totalTime <= fastApproachDistance and closestApproachTime > 0 and closestApproachTime <= fastApproachTime and closestApproachDistance <= fastApproachRadius
+															local closeFastApproachTime = math.clamp(0.18 + difference * 0.04 + math.max(exponent - 100, 0) / 12000, 0.18, 0.28) + tbl25.Loop.HighPingLead(difference) + ikConstraint.StraightBonus
+															local closeFastApproachDistance = math.clamp(16 + exponent * 0.04, 20, 80) + exponent * (tbl25.Loop.HighPingLead(difference) + ikConstraint.StraightBonus)
+															local closeFastApproach = graph and not result73 and exponent >= 100 and totalTime <= closeFastApproachDistance and closestApproachTime > 0 and closestApproachTime <= closeFastApproachTime and closestApproachDistance <= fastApproachRadius
+															-- Prazo de seguranca: a bola nao chega antes de distancia/velocidade. Se esse tempo ja cabe no ping + margem,
+															-- nenhum filtro de curva pode segurar o parry (segurar mais que isso e morrer).
+															local sureDeadline = math.clamp(0.12 + difference * 0.75, 0.15, 0.3) + tbl25.Loop.HighPingLead(difference)
+															local sureArrival = not result73 and result72 == targetPlayerName and exponent >= 1 and (totalTime - tbl25.Loop.SlowBall.HitRadius) / exponent <= sureDeadline
+												-- Guarda a ultima direcao por bola. Uma mudanca recente ativa um gate curto para evitar parry baseado na trajetoria antiga.
+												local curveGuard = ikConstraint.AutoParryCurveGuard
+												local curveRecent = false
+												local curveReady = false
+												if not result73 and exponent > 1 then
+													local currentDirection = moveDirection.Unit
+													if not curveGuard then
+														curveGuard = { Direction = currentDirection, SampleAt = osClock, LastTurnAt = 0 }
+														ikConstraint.AutoParryCurveGuard = curveGuard
+													elseif osClock - (curveGuard.SampleAt or 0) >= 0.04 then
+														if curveGuard.Direction:Dot(currentDirection) < 0.998 then
+															if osClock - (curveGuard.LastTurnAt or 0) > 0.16 then
+																curveGuard.EpisodeAt = osClock
+															end
+															curveGuard.LastTurnAt = osClock
+														end
+														curveGuard.Direction = currentDirection
+														curveGuard.SampleAt = osClock
+													end
+													if result72 == targetPlayerName and curveGuard.LastTurnAt > 0 and osClock - curveGuard.LastTurnAt <= 0.16 and osClock - (curveGuard.EpisodeAt or curveGuard.LastTurnAt) <= 0.24 then
+														curveRecent = true
+														local curveTtcWindow = math.clamp(0.18 + measuredPingMs / 2000, 0.18, 0.28) + tbl25.Loop.HighPingLead(difference)
+														local curveMissLimit = math.min(fastApproachRadius, math.clamp(12 + exponent * 0.004, 14, 22))
+														curveReady = leftChild:Dot(moveDirection) > 0 and closestApproachTime > 0 and closestApproachTime <= curveTtcWindow and closestApproachDistance <= curveMissLimit
+													end
+												end
+															-- Bola lenta mirando em nos mas longe do impacto (ou se afastando pela curva): parry agora expiraria
+															-- antes de ela chegar. Espera ela realmente se aproximar.
+											local slowEarly = false
+											local slowCfg = tbl25.Loop.SlowBall
+											if graph and not result73 and result72 == targetPlayerName and exponent >= 1 and exponent < slowCfg.Speed then
+												local ttiStraight = onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection)
+												slowEarly = not tbl25.Loop.SlowTiming(ikConstraint, totalTime, exponent, ttiStraight, difference, osClock, rayOrigin, moveDirection, currentPosition)
+											end
+										-- Anti-curva (comum e Backwards) nunca segura alem do prazo de seguranca (sureArrival): sem isso o parry
+											-- ficava bloqueado ate a bola bater.
+											if not (isRoblox and not sureArrival and (tbl20.BackwardsAntiCurveEnabled and index11(dotProduct, moveDirection, index3, active) or index15(dotProduct, vehicleRoot, rayOrigin, moveDirection, totalTime, exponent, leftChild, index3, difference))) then
 																if not (result73 and not bestPair) then
 																	local maximumValue = math.clamp((endPosition - 1) / 99, 0, 1)
 																	local offsetZ = maximumValue * maximumValue * (stack[61] - 2 * maximumValue)
@@ -10179,7 +10708,7 @@ Listener.Observe = ObserveDevice
 																		offsetY = exponent * (line or 0)
 																	end
 
-																	local index36 = maximumLength + clampedY + isInside + index35 + (offsetY or stack[33])
+																	local index36 = maximumLength + clampedY + isInside + index35 + (offsetY or stack[33]) + exponent * (tbl25.Loop.HighPingLead(difference) + ikConstraint.StraightBonus)
 																	local seat = tbl20.AutoAbilityEnabled and not result73 and result72 == targetPlayerName and totalTime <= maximumLength
 																	local result75 = nil
 																	local index58 = nil
@@ -10205,7 +10734,18 @@ Listener.Observe = ObserveDevice
 																		end
 																	end
 
-																	if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and (totalTime <= index36 or fastApproach) and not ikConstraint.Parried and (not top or currentDate ~= word) then
+																	local parryDistanceGate = totalTime <= index36 or fastApproach or closeFastApproach
+										if curveRecent then
+											parryDistanceGate = curveReady or sureArrival
+										end
+										if graph and not result73 and result72 == targetPlayerName and exponent >= tbl25.Loop.SlowBall.Speed then
+											local ttiStraightFast = onInputEnded(dotProduct, currentPosition, rayOrigin, moveDirection)
+											local curveTimingOk = tbl25.Loop.CurveTiming(ikConstraint, totalTime, exponent, ttiStraightFast, difference, osClock, rayOrigin, moveDirection, currentPosition)
+											if curveTimingOk ~= nil then
+												parryDistanceGate = curveTimingOk or sureArrival
+											end
+										end
+										if (isRoblox or not result73 and result72 == targetPlayerName or bestChild or bestPair) and parryDistanceGate and not slowEarly and not ikConstraint.Parried and (not top or currentDate ~= word) then
 																		local empty = isRoblox or bestPair or not result73 and result72 == targetPlayerName
 
 																		if not empty and bestChild then
@@ -10222,8 +10762,9 @@ Listener.Observe = ObserveDevice
 																				net = word
 																				slider = result75
 																				newPrice = index58
-																				screenPoint = ikConstraint
-																				result69 = endPosition
+																screenPoint = ikConstraint
+																ikConstraint.HighSpeedParryCandidate = result72 == targetPlayerName and exponent >= tbl25.Loop.SlowBall.Speed
+																result69 = endPosition
 																				result70 = bestPair
 																				result71 = changed
 																			end
@@ -10247,18 +10788,22 @@ Listener.Observe = ObserveDevice
 										if not net then
 											return
 										end
-										screenPoint.Parried = true
-										screenPoint.ParryResetAt = osClock + 0.6
-										screenPoint.AutoParryAt = osClock
+
+														screenPoint.Parried = true
+														screenPoint.ParryResetAt = osClock + 0.6
+														screenPoint.HighSpeedParryLock = screenPoint.HighSpeedParryCandidate == true
+														screenPoint.HighSpeedParryCandidate = nil
+														screenPoint.AutoParryAt = osClock
 										top = true
 										currentDate = net
 										elapsedTime = screenPoint.ParryResetAt
 										larpBBState.AutoBall = net
 
-										if not fn40(net, valueType, nil, bestLabel, angleRadians, result69) then
-											screenPoint.Parried = false
-											screenPoint.ParryResetAt = 0
-											screenPoint.AutoParryAt = nil
+														if not fn40(net, valueType, nil, bestLabel, angleRadians, result69) then
+															screenPoint.Parried = false
+															screenPoint.ParryResetAt = 0
+															screenPoint.HighSpeedParryLock = nil
+															screenPoint.AutoParryAt = nil
 											larpBBState.AutoBall = nil
 											top = false
 											currentDate = nil
@@ -10281,16 +10826,19 @@ Listener.Observe = ObserveDevice
 								end
 							end
 
-							tbl25.Loop.ResetSpam = function()
-								table.clear(larpBBState.SpamParries)
-								larpBBState.SpamBall = nil
-								larpBBState.SpamTargetAt = nil
-								larpBBState.AutoSpamAt = nil
-								larpBBState.AutoSpamCarry = 0
-								larpBBState.AutoSpamTime = nil
-							end
+								tbl25.Loop.ResetSpam = function()
+									table.clear(larpBBState.SpamParries)
+									larpBBState.SpamBall = nil
+									larpBBState.SpamTargetAt = nil
+									larpBBState.AutoSpamAt = nil
+									larpBBState.AutoSpamCarry = 0
+									larpBBState.AutoSpamTime = nil
+								end
 
-							tbl25.Loop.AutoSpamLoop = function()
+								local AUTO_SPAM_CPS = 20
+								local AUTO_SPAM_MAX_BATCH = stack[72] + 1
+
+								tbl25.Loop.AutoSpamLoop = function()
 								local gameProcessed = tbl20.AntiPhantomEnabled or tbl20.AntiFlashCounterEnabled
 								local radians = nil
 								local angleRadians = nil
@@ -10308,17 +10856,18 @@ Listener.Observe = ObserveDevice
 										left:Fire()
 									end
 
-									return
-								end
+											return
+										end
 
-								local active = radians ~= nil
-								if not tbl20.AutoSpamEnabled and not active then
-									tbl25.Loop.ResetSpam()
-									return
-								end
-								local osClock = os.clock()
-								local difference = math.min(osClock - (larpBBState.AutoSpamTime or osClock), 0.066666666666666666)
-								larpBBState.AutoSpamTime = osClock
+										local active = radians ~= nil
+										if not tbl20.AutoSpamEnabled and not active then
+											tbl25.Loop.ResetSpam()
+											return
+										end
+									local osClock = os.clock()
+									local elapsed = math.max(osClock - (larpBBState.AutoSpamTime or osClock), 0)
+									local difference = math.min(elapsed, AUTO_SPAM_MAX_BATCH / AUTO_SPAM_CPS)
+									larpBBState.AutoSpamTime = osClock
 								if tbl20.DeathSlashDetection and larpBBState.DeathSlash then
 									tbl25.Loop.ResetSpam()
 									return
@@ -10336,14 +10885,22 @@ Listener.Observe = ObserveDevice
 								end
 								local isArray = model and model.Parent ~= smallest and isInTrainingArea(model)
 								if not vehicleRoot or model.Parent ~= smallest and not isArray then
+									larpBBState.AutoSpamCarry = 0
 									return
 								end
 
 								if continuation(model) then
+									larpBBState.AutoSpamCarry = 0
 									return
 								end
 								local track = tbl25.Ball.GetAllBalls()
 								if #track == 0 then
+									larpBBState.AutoSpamCarry = 0
+									return
+								end
+
+								if tbl25.Loop.NoLivingOpponent(model, osClock) then
+									larpBBState.AutoSpamCarry = 0
 									return
 								end
 								local currentPosition = vehicleRoot.Position
@@ -10398,6 +10955,12 @@ Listener.Observe = ObserveDevice
 									return
 								end
 								local totalTime = index4(nearestDistance).Magnitude
+								-- Bola lenta nao precisa de spam: o autoparry sozinho a defende. Sem isso o spam entrava logo apos o
+								-- parry certo e mandava um segundo parry junto. So vale para o autoparry (nao para Phantom).
+								if bestLabel and not active and totalTime < tbl25.Loop.SlowBall.SpamMinSpeed then
+									larpBBState.AutoSpamCarry = 0
+									return
+								end
 								local steering = previous()
 								local openError = math.min(0.3 + steering / 1000, stack[81])
 								local bestPair = osClock - (larpBBState.AutoSpamAt or 0) <= openError
@@ -10483,19 +11046,27 @@ Listener.Observe = ObserveDevice
 									end
 								end
 
-								if bestLabel then
-									larpBBState.AutoSpamAt = osClock
-								end
+									local isRemote = tbl20.AutoSpamType == "Remote"
+									if isRemote and (not tbl25.Parry or type(tbl25.Parry.Fire) ~= "function") then
+										return
+									end
 
-								if tbl20.AutoSpamType == "Remote" then
-									larpBBState.ParryMethod = "Remote"
+									-- Fractional token bucket: cap at 20 actions/s and discard stale backlog.
+									local carry = math.clamp(tonumber(larpBBState.AutoSpamCarry) or 0, 0, 0.999999)
+									carry += math.max(difference, 0) * AUTO_SPAM_CPS
+									local sendCount = math.min(math.floor(carry + 1e-9), AUTO_SPAM_MAX_BATCH)
+									larpBBState.AutoSpamCarry = math.clamp(carry - sendCount, 0, 0.999999)
+									if sendCount <= 0 then
+										return
+									end
 
-									if tbl25.Parry and tbl25.Parry.Fire then
-										larpBBState.AutoSpamCarry = (larpBBState.AutoSpamCarry or stack[33]) + math.max(difference * 120 - stack[18], 0)
-										local major = stack[72]
-										local offsetZ = math.min(math.floor(larpBBState.AutoSpamCarry), major)
-										larpBBState.AutoSpamCarry = math.min(larpBBState.AutoSpamCarry - offsetZ, 7)
-										local byte, result68 = tbl25.Parry.Fire(nil, stack[200], offsetZ > 0 and tbl25.Parry.GetData(nil, larpBBState.AutoSpamData), offsetZ + 1)
+									if bestLabel then
+										larpBBState.AutoSpamAt = osClock
+									end
+
+									if isRemote then
+										larpBBState.ParryMethod = "Remote"
+										local byte, result68 = tbl25.Parry.Fire(nil, stack[200], tbl25.Parry.GetData(nil, larpBBState.AutoSpamData), sendCount)
 
 										if byte then
 											larpBBState.AutoSpamParryAt = osClock
@@ -10503,17 +11074,24 @@ Listener.Observe = ObserveDevice
 										end
 
 										if byte and not result68 and tbl20.AutoSpamAnimFix then
-											tbl25.Animation.PlayAnimation(nil, "Animation + Click")
+											local playAnimation = tbl25.Animation and tbl25.Animation.PlayAnimation
+											if type(playAnimation) == "function" then
+												pcall(playAnimation, nil, "Animation + Click")
+											end
+										end
+									else
+										local sent = false
+										for _ = 1, sendCount do
+											if not tbl25.Animation.Input(tbl20.AutoSpamType, true) then
+												break
+											end
+											sent = true
+										end
+										if sent then
+											larpBBState.AutoSpamParryAt = osClock
+											larpBBState.ExtraParryCooldownUntil = nil
 										end
 									end
-								else
-									larpBBState.AutoSpamCarry = 0
-
-									if tbl25.Animation.Input(tbl20.AutoSpamType, true) then
-										larpBBState.AutoSpamParryAt = osClock
-										larpBBState.ExtraParryCooldownUntil = nil
-									end
-								end
 							end
 
 							tbl25.Loop.RefreshAutoSpam = function()
@@ -10584,6 +11162,9 @@ Listener.Observe = ObserveDevice
 							tbl25.ManualSpam = { Data = { {}, { 0, 0 } }, Carry = 0 }
 
 							tbl25.MobileControls.Create = function(line, object, descendant, radius)
+									if not touchEnabled or userInputService.KeyboardEnabled then
+										return nil
+									end
 								local jsonString = tbl22.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 								local radians = tbl25.MobileControls.GetX(descendant)
 
@@ -10645,7 +11226,7 @@ Listener.Observe = ObserveDevice
 							end
 
 							tbl25.ManualSpam.Refresh = function()
-								if not tbl20.ManualSpamUIEnabled then
+								if not tbl20.ManualSpamUIEnabled or not touchEnabled or userInputService.KeyboardEnabled then
 									local hookName = larpBBState.SpamPanel
 									larpBBState.SpamPanel = nil
 									tbl25.MobileControls.Remove(hookName)
@@ -10818,7 +11399,7 @@ Listener.Observe = ObserveDevice
 							end
 
 							tbl25.Triggerbot.RefreshUI = function()
-								if not tbl20.TriggerbotUIEnabled then
+								if not tbl20.TriggerbotUIEnabled or not touchEnabled or userInputService.KeyboardEnabled then
 									local timerName = larpBBState.TriggerPanel
 									larpBBState.TriggerPanel = nil
 									tbl25.MobileControls.Remove(timerName)
@@ -10899,7 +11480,7 @@ Listener.Observe = ObserveDevice
 										larpBBState.ParryMethod = stack[90]
 
 										if tbl25.Parry and tbl25.Parry.Fire then
-											local radians, angleRadians = tbl25.Parry.Fire(nil, true, line, descendant)
+											local radians, angleRadians = tbl25.Parry.Fire(nil, true, line, descendant, true)
 
 											if radians and not angleRadians and object ~= stack[101] and tbl20.ManualSpamAnimFix and "Animation + Click" == "Click" then
 												tbl25.Animation.PlayAnimation(nil, "Click")
@@ -10929,131 +11510,90 @@ Listener.Observe = ObserveDevice
 								local state = tbl25.ManualSpam
 								state.Time = os.clock()
 								state.Carry = 0
-								state.FrameEma = 1 / 60 -- media do tempo de frame (ja inclui o custo do proprio spam)
 								state.DataAt = 0
 								state.Data = state.Data or { {}, { 0, 0 } }
 
-								-- CPS FIXO (sem slider). Cada disparo chama a funcao PRY do proprio jogo, que e pesada:
-								-- 40/s e o maior ritmo que se mantem sem derrubar o FPS; se o FPS cair, a trava abaixo reduz ate 20/s.
-								local SPAM_CPS = 40
-								local SPAM_MIN_CPS = 20
-								local SPAM_MAX_PER_FRAME = 2
-								local SPAM_FPS_FLOOR = 50
-
+								-- Preserve the configured CPS while limiting per-frame burst spikes.
+								local MAX_CPS, MAX_PER_FRAME, MAX_FRAME_DT = 500, 10, 0.05
 								larpBBState.Connections["Manual Spam"] = runService.PreSimulation:Connect(function(dt)
-									if not tbl20.ManualSpamEnabled then
-										return
-									end
+									if not tbl20.ManualSpamEnabled then return end
+
 									smallest = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
 									local model = localPlayer.Character
-									if not model or model.Parent ~= smallest then
+									local isTraining = model and model.Parent ~= smallest and isInTrainingArea(model)
+									if not model or (model.Parent ~= smallest and not isTraining) then
 										state.Carry = 0
+										state.Time = os.clock()
 										return
 									end
 
-									-- sem bola em jogo nao ha o que parryar (poupa FPS e remote)
-									if #tbl25.Ball.GetAllBalls() == 0 then
-										state.Carry = 0
-										return
-									end
-
-									local osClock = os.clock()
+									local now = os.clock()
 									local isRemote = tbl20.ManualSpamType == "Remote"
-									local animFixOn = isRemote and tbl20.ManualSpamAnimFix and "Animation + Click" ~= "Click"
-
-									-- Anim Fix: tentado todo frame; a maquina de estados do PlayAnimation limita a 1 a cada 0.3s
-									if animFixOn then
+									if isRemote and tbl20.ManualSpamAnimFix then
 										local fix = tbl25.Animation.Fix
 										if fix.Force or not (fix.Recent or fix.Busy) then
 											tbl25.Animation.PlayAnimation(nil, "Animation + Click")
 										end
 									end
 
-									-- tempo real do frame (media) para a trava anti-queda de FPS
-									local frame = osClock - state.Time
-									state.Time = osClock
-									if frame > 0.25 then
-										frame = 0.25
-									end
-									state.FrameEma = state.FrameEma + (frame - state.FrameEma) * 0.15
+									if type(dt) ~= "number" then dt = now - (state.Time or now) end
+									state.Time = now
+									if dt < 0 or dt > MAX_FRAME_DT then dt = 0 end
 
-									-- frames longos (>50ms) sao ignorados: nada de rajada de "recuperacao"
-									if not dt or dt > 0.05 or dt < 0 then
-										dt = 0
-									end
-
-									local cps = SPAM_CPS
-									if state.FrameEma > 1 / SPAM_FPS_FLOOR then
-										cps = math.max(SPAM_MIN_CPS, cps * (1 / SPAM_FPS_FLOOR) / state.FrameEma)
-									end
-
+									local cps = math.clamp(math.floor(tonumber(tbl20.ManualSpamCPS) or 60), 60, MAX_CPS)
 									local count
 									if isRemote then
 										state.Carry = state.Carry + dt
-										count = math.floor(state.Carry * cps)
-										if count <= 0 then
-											return
-										end
-										if count > SPAM_MAX_PER_FRAME then
-											count = SPAM_MAX_PER_FRAME
-										end
-										state.Carry = math.min(state.Carry - count / cps, 1 / cps)
-										if state.Carry < 0 then
-											state.Carry = 0
-										end
+										local due = math.floor(state.Carry * cps)
+										if due <= 0 then return end
+										state.Carry = math.max(0, state.Carry - due / cps)
+										count = math.min(due, MAX_PER_FRAME)
 									else
 										state.Carry = 0
 										count = 1
 									end
 
-									-- dados (alvos/camera) reaproveitados por ~16ms; com Target Player nem calcula
 									local data
 									if isRemote then
 										local hasTarget = tbl25.Target and tbl25.Target.GetData and tbl25.Target.GetData() ~= nil
 										if not hasTarget then
-											if osClock - state.DataAt >= 0.016 or not state.Data[3] then
-												state.DataAt = osClock
+											if now - state.DataAt >= 0.016 or not state.Data[3] then
+												state.DataAt = now
 												state.Data = tbl25.Parry.GetData(nil, state.Data)
 											end
 											data = state.Data
 										end
 									end
 
-									local radians = tbl25.Loop.ManualSpamLoop(data, nil, count)
-									if radians then
-										larpBBState.ManualSpamAt = osClock
-									end
+									local succeeded = tbl25.Loop.ManualSpamLoop(data, nil, count)
+									if succeeded then larpBBState.ManualSpamAt = now end
 								end)
 
 								smallest = smallest and smallest.Parent and smallest or workspace:FindFirstChild("Alive")
 								local model = localPlayer.Character
-
-								if model and model.Parent == smallest then
-									-- primeira animacao sai na hora (ignora o cooldown)
-									if tbl25.Animation.BypassCooldown then
-										tbl25.Animation.BypassCooldown()
-									end
-									local radians, angleRadians = tbl25.Loop.ManualSpamLoop()
-
-									if radians and not angleRadians and tbl20.ManualSpamType == "Remote" and tbl20.ManualSpamAnimFix and "Animation + Click" ~= "Click" then
+								local isTraining = model and model.Parent ~= smallest and isInTrainingArea(model)
+								if model and (model.Parent == smallest or isTraining) then
+									if tbl25.Animation.BypassCooldown then tbl25.Animation.BypassCooldown() end
+									local succeeded, blocked = tbl25.Loop.ManualSpamLoop()
+									if succeeded and not blocked and tbl20.ManualSpamType == "Remote" and tbl20.ManualSpamAnimFix then
 										tbl25.Animation.PlayAnimation(nil, "Animation + Click")
 									end
 								end
 							end
 
 							tbl25.ManualSpam.Stop = function()
-								local result23 = tbl20.ManualSpamEnabled
+								local wasEnabled = tbl20.ManualSpamEnabled
 								tbl20.ManualSpamEnabled = false
+								tbl25.ManualSpam.Carry = 0
 								tbl25.ManualSpam.Refresh()
 								coroutineFunction("Manual Spam")
-
-								if result23 and tbl20.ManualSpamType == stack[90] and tbl20.ManualSpamAnimFix then
+								if wasEnabled and tbl20.ManualSpamType == stack[90] and tbl20.ManualSpamAnimFix then
 									task.spawn(tbl25.Animation.PlayAnimation)
 								end
 							end
 
 							tbl25.ManualSpam.SetEnabled = function(line)
-								if line then
+								if line == true then
 									tbl25.ManualSpam.Start()
 								else
 									tbl25.ManualSpam.Stop()
@@ -13558,8 +14098,18 @@ tbl25.UIExtra.ToggleKeybindList = function(pointB)
 										player22.cancel(radians)
 									end
 
-									if hook.Swords:EquipSwordTo(radians, line) == false then
-										return
+									-- FIX espadas que nao equipavam: pcall + fallback ForceEquipSwordTo + aviso no log com o nome da espada
+									if not hook.GetSwordData(line) then
+										warn("[Larp] UnlockAll: sem dados da espada '" .. tostring(line) .. "'")
+									end
+
+									local equipOk, equipResult = pcall(hook.Swords.EquipSwordTo, hook.Swords, radians, line)
+									if not equipOk or equipResult == false then
+										local forceOk, forceResult = pcall(hook.Swords.ForceEquipSwordTo, hook.Swords, radians, line, nil, hook.Accessory)
+										if not forceOk or not forceResult then
+											warn("[Larp] UnlockAll: falha ao equipar a espada '" .. tostring(line) .. "' (" .. tostring(equipOk and "EquipSwordTo=false" or equipResult) .. ")")
+											return
+										end
 									end
 									hook.Slash = hook.GetSlash(line) or hook.Slash
 
@@ -18990,20 +19540,24 @@ tbl24.toggles.WorldMediaSkybox = mediaGroup:AddToggle({
 								        })
 
 								        tbl24.textboxes.WorldMediaSkyboxImage = mediaGroup:AddTextbox({
-									            Name = "Image / Direct Link",
-									            SaveId = "World_Media_Skybox_Image",
-									            Default = "",
-									            Placeholder = "Roblox asset ID or direct PNG/JPG URL",
-								            Callback = function(value)
-								                skyInput = tostring(value or "")
-								                if skyEnabled and skyInput ~= "" then
-								                    applySkybox()
-								                elseif skyInput == "" and skyEnabled then
-								                    skyEnabled = false
-								                    restoreSkybox()
-								                end
-								            end,
-								        })
+	Name = "Image / Direct Link",
+	Centered = true,
+	SaveId = "World_Media_Skybox_Image",
+	Default = "",
+	Placeholder = "Asset ID or PNG/JPG link",
+	Callback = function(value)
+		-- FIX: tira espacos/quebras de linha do texto colado e nao desliga mais o skybox ao limpar a caixa
+		skyInput = tostring(value or ""):gsub("[%c]", ""):match("^%s*(.-)%s*$") or ""
+		if not skyEnabled then
+			return
+		end
+		if skyInput ~= "" then
+			applySkybox()
+		else
+			restoreSkybox()
+		end
+	end,
+})
 
 								        local fogEnabled = false
 								        local fogDistance = 10000
@@ -19740,11 +20294,23 @@ local immoOk, immoErr = pcall(function()
 		immoGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 		immoGui.Enabled = Immortality.UI
 
-		local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
-		if syn and syn.protect_gui then
-			pcall(syn.protect_gui, immoGui)
+		local parentGui
+		if gethui then
+		    local ok, holder = pcall(gethui)
+		    if ok and typeof(holder) == "Instance" then parentGui = holder end
 		end
-		immoGui.Parent = parentGui
+		if not parentGui then
+		    local ok, holder = pcall(function()
+		        return localPlayer and (localPlayer:FindFirstChildOfClass("PlayerGui") or localPlayer:FindFirstChild("PlayerGui"))
+		    end)
+		    if ok then parentGui = holder end
+		end
+		if not parentGui then
+		    local ok, holder = pcall(function() return game:GetService("CoreGui") end)
+		    if ok then parentGui = holder end
+		end
+		if syn and syn.protect_gui then pcall(syn.protect_gui, immoGui) end
+		if parentGui then pcall(function() immoGui.Parent = parentGui end) end
 
 		local handler = Instance.new("Frame")
 		handler.Name = "ImmortalityHandler"
@@ -19846,21 +20412,6 @@ local immoOk, immoErr = pcall(function()
 		end,
 	})
 
-	tbl24.toggles.ImmortalityUI = immoGroup:AddToggle({
-		Name = "Show Button",
-		SaveId = "Player_Immortality_UI",
-		Default = false,
-		Callback = function(value)
-			Immortality.UI = value and true or false
-			if Immortality.UI then
-				buildButton()
-			end
-			if immoGui then
-				immoGui.Enabled = Immortality.UI
-			end
-		end,
-	})
-
 	tbl24.sliders.ImmortalityAngle = immoGroup:AddSlider({
 		Name = "Angle",
 		SaveId = "Player_Immortality_Angle",
@@ -19925,8 +20476,10 @@ local immoOk, immoErr = pcall(function()
 		end
 
 		hrp.CFrame = hrp.CFrame + Vector3.new(0, 0.01, 0)
-		desyncCFrame = hrp.CFrame
-		desyncVelocity = hrp.AssemblyLinearVelocity
+		local savedCFrame = hrp.CFrame
+		local savedVelocity = hrp.AssemblyLinearVelocity
+		desyncCFrame = savedCFrame
+		desyncVelocity = savedVelocity
 
 		local currentTime = tick()
 		local angle = currentTime * math.pi * 2 * Immortality.Angle / 5
@@ -19939,14 +20492,15 @@ local immoOk, immoErr = pcall(function()
 			math.sin(angle) * Immortality.SquareRadius
 		)
 
-		hrp.CFrame = desyncCFrame + offset
+		hrp.CFrame = savedCFrame + offset
 		hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
 
 		immoRunService.RenderStepped:Wait()
 
+		-- usa as copias locais: desyncCFrame pode virar nil se o Immortality for desligado durante o Wait
 		if hrp.Parent then
-			hrp.CFrame = desyncCFrame
-			hrp.AssemblyLinearVelocity = desyncVelocity
+			hrp.CFrame = savedCFrame
+			hrp.AssemblyLinearVelocity = savedVelocity
 		end
 	end))
 
@@ -19985,21 +20539,23 @@ local immoOk, immoErr = pcall(function()
 	end
 
 	-- ao fechar o Larp: desliga e remove o botão
-	local immoBaseReset = playerMods.Reset
+	local immoMods = tbl25 and tbl25.PlayerMods
+	if immoMods then
+		local immoBaseReset = immoMods.Reset
+		immoMods.Reset = function()
+			if immoBaseReset then
+				immoBaseReset()
+			end
 
-	playerMods.Reset = function()
-		if immoBaseReset then
-			immoBaseReset()
-		end
+			Immortality.Enabled = false
+			desyncCFrame = nil
+			desyncVelocity = nil
 
-		Immortality.Enabled = false
-		desyncCFrame = nil
-		desyncVelocity = nil
-
-		if immoGui then
-			immoGui:Destroy()
-			immoGui = nil
-			immoButton = nil
+			if immoGui then
+				immoGui:Destroy()
+				immoGui = nil
+				immoButton = nil
+			end
 		end
 	end
 end)
@@ -20099,7 +20655,7 @@ end
 										SaveId = "Parry_Accuracy",
 										Min = 0,
 										Max = stack[158],
-										Default = 0,
+										Default = 60,
 										Increment = 1,
 										Callback = operation("ParryAccuracy"),
 										OnCommit = onInputEnded,
@@ -20108,8 +20664,8 @@ end
 										Name = "Parry Range",
 										SaveId = "Parry_Range",
 										Min = 0,
-										Max = 10,
-										Default = 0,
+										Max = 30,
+										Default = 1,
 										Increment = 1,
 										Callback = operation("ParryRange"),
 									})
@@ -20315,9 +20871,14 @@ tbl25.Target.ApplyHighlight = function(character)
 		end
 	end
 	if not parented then
-		highlight.Parent = game:GetService("CoreGui")
+		local playerGui = localPlayer and (localPlayer:FindFirstChildOfClass("PlayerGui") or localPlayer:FindFirstChild("PlayerGui"))
+		if playerGui then parented = pcall(function() highlight.Parent = playerGui end) end
 	end
-	tbl25.Target.Highlight = highlight
+	if not parented then
+		local ok, core = pcall(function() return game:GetService("CoreGui") end)
+		if ok then parented = pcall(function() highlight.Parent = core end) end
+	end
+	if not parented then highlight:Destroy(); return end
 end
 
 tbl25.Target.UpdateHighlight = function()
@@ -20525,10 +21086,12 @@ end)
 										NoSave = stack[200],
 										Default = false,
 																	Notify = stack[200],
-																	Callback = tbl25.ManualSpam.SetEnabled,
+																	Callback = function(enabled)
+											tbl25.ManualSpam.SetEnabled(enabled == true)
+										end,
 																})
 
-																	if touchEnabled then
+																	if touchEnabled and not userInputService.KeyboardEnabled then
 																		tbl24.toggles.Manual_Spam_UI = vertexCount:AddToggle({
 																			Name = "Manual UI (Mobile)",
 																			SaveId = "Manual_Spam_UI",
@@ -20544,7 +21107,18 @@ end)
 										Callback = operation("ManualSpamAnimFix"),
 									})
 
-									tbl24.dropdowns.ManualSpamType = vertexCount:AddDropdown({
+									tbl24.sliders.ManualSpamCPS = vertexCount:AddSlider({
+										Name = "Manual Spam CPS",
+										SaveId = "ManualSpamCPS",
+										Min = 60,
+										Max = 500,
+										Default = 60,
+										Increment = 10,
+										Callback = function(value)
+											tbl20.ManualSpamCPS = math.clamp(tonumber(value) or 60, 60, 500)
+										end,
+									})
+						tbl24.dropdowns.ManualSpamType = vertexCount:AddDropdown({
 										Name = "Manual Type",
 										SaveId = "Manual_Spam_Type",
 										Options = { stack[90], "VIM", stack[191] },
@@ -20565,12 +21139,14 @@ end)
 										end,
 									})
 
-									tbl24.toggles.Triggerbot_UI = steering:AddToggle({
-										Name = "Triggerbot UI (Mobile)",
-										SaveId = "Triggerbot_UI",
-										Default = false,
-										Callback = operation("TriggerbotUIEnabled", tbl25.Triggerbot.RefreshUI),
-									})
+									if touchEnabled and not userInputService.KeyboardEnabled then
+										tbl24.toggles.Triggerbot_UI = steering:AddToggle({
+											Name = "Triggerbot UI (Mobile)",
+											SaveId = "Triggerbot_UI",
+											Default = false,
+											Callback = operation("TriggerbotUIEnabled", tbl25.Triggerbot.RefreshUI),
+											})
+											end
 
 									tbl24.dropdowns.TriggerbotType = steering:AddDropdown({
 										Name = "Triggerbot Type",
@@ -20578,11 +21154,11 @@ end)
 										Options = { "Remote", "VIM", "Mouse Click" },
 										Default = stack[90],
 										Callback = operation("TriggerbotType", function(line)
-											heartbeatUpdate("Triggerbot", line, "triggerbot mode")
+										heartbeatUpdate("Triggerbot", line, "triggerbot mode")
 										end),
-									})
+										})
 
-									tbl24.sliders.Triggerbot_MS = steering:AddSlider({
+										tbl24.sliders.Triggerbot_MS = steering:AddSlider({
 										Name = "Delay (MS)",
 										SaveId = "Triggerbot_Delay",
 										Min = 0,
@@ -21635,6 +22211,7 @@ end)
 
 									tbl24.textboxes.MoneySpoofer = moneySpooferGroup:AddTextbox({
 									    Name = "Displayed Amount",
+    Centered = true,
 									    SaveId = "Money_Spoofer_Local",
 									    Default = "",
 									    Placeholder = "Only changes your screen",
@@ -21657,6 +22234,7 @@ end)
 
 									tbl24.textboxes.CustomStreak = winStreakSpooferGroup:AddTextbox({
 										Name = "Streak",
+										Centered = true,
 										SaveId = "Streak",
 										Placeholder = "Streak Here",
 										Callback = function(maximum)
@@ -21668,7 +22246,8 @@ end)
 										end,
 									})
 
-									tbl24.toggles.Ball_Stats = placeholder:AddGroup({ Name = "Ball Misc", Side = "Left", Icon = "" }):AddToggle({ Name = "Ball Stats", SaveId = "Ball_Stats", Default = false, Callback = tbl25.BallStats.Toggle })
+
+										tbl24.toggles.Ball_Stats = placeholder:AddGroup({ Name = "Ball Misc", Side = "Left", Icon = "" }):AddToggle({ Name = "Ball Stats", SaveId = "Ball_Stats", Default = false, Callback = tbl25.BallStats.Toggle })
 									local avatarChangerGroup = avatarTab:AddGroup({ Name = "Avatar Changer", Side = "Left", Icon = "rbxassetid://135756197673563" })
 
 											tbl24.toggles.Avatar_Changer = avatarChangerGroup:AddToggle({
@@ -21685,6 +22264,7 @@ end)
 
 											tbl24.textboxes.Avatar_Changer_Input = avatarChangerGroup:AddTextbox({
 												Name = "Avatar User/ID",
+												Centered = true,
 												SaveId = "Avatar_User",
 												Placeholder = "user/userid",
 												Callback = function(height)
@@ -21918,7 +22498,7 @@ end)
 
 								local function cleanup()
 									local mobileGroup = nil
-									if touchEnabled then
+									if touchEnabled and not userInputService.KeyboardEnabled then
 									    mobileGroup = entity:AddGroup({ Name = "Mobile", Side = "Left", Icon = "rbxassetid://10723427199" })
 									    tbl24.sliders.MobileButtonScale = mobileGroup:AddSlider({
 									        Name = "Mobile Button Scale",
@@ -21945,6 +22525,20 @@ end)
 									        end
 									    end,
 									})
+tbl24.sliders.MenuScale = uiToggleGroup:AddSlider({
+	Name = "UI Scale",
+	SaveId = "UI_Scale",
+	Min = 50,
+	Max = 150,
+	Default = 100,
+	Increment = 1,
+	Callback = function(value)
+		tbl20.MenuScale = math.clamp(tonumber(value) or 100, 50, 150)
+		if v103 and v103.UpdateLayoutScale then
+			v103:UpdateLayoutScale()
+		end
+	end,
+})
 -- ===== LARP THEMES =====
 local larpThemes = {
 Crimson = {
@@ -21955,34 +22549,10 @@ Accent = Color3.fromRGB(200, 30, 50), AccentDark = Color3.fromRGB(140, 18, 34), 
 Text = Color3.fromRGB(235, 235, 238), SubText = Color3.fromRGB(140, 140, 148), TextHover = Color3.fromRGB(255, 255, 255),
 Muted = Color3.fromRGB(88, 88, 98), Alt1 = Color3.fromRGB(16, 16, 20), Alt2 = Color3.fromRGB(8, 8, 10),
 },
-Midnight = {
-Primary = Color3.fromRGB(5, 7, 12), Secondary = Color3.fromRGB(9, 12, 19), Tertiary = Color3.fromRGB(13, 17, 26),
-Surface = Color3.fromRGB(17, 22, 33), Element = Color3.fromRGB(22, 28, 42), ElementHover = Color3.fromRGB(32, 40, 60),
-Border = Color3.fromRGB(36, 46, 68), BorderSoft = Color3.fromRGB(26, 33, 50),
-Accent = Color3.fromRGB(56, 132, 255), AccentDark = Color3.fromRGB(34, 92, 200), AccentLight = Color3.fromRGB(130, 180, 255),
-Text = Color3.fromRGB(232, 238, 248), SubText = Color3.fromRGB(135, 148, 170), TextHover = Color3.fromRGB(255, 255, 255),
-Muted = Color3.fromRGB(86, 98, 120), Alt1 = Color3.fromRGB(15, 20, 30), Alt2 = Color3.fromRGB(7, 10, 15),
-},
-Emerald = {
-Primary = Color3.fromRGB(5, 9, 7), Secondary = Color3.fromRGB(8, 13, 10), Tertiary = Color3.fromRGB(12, 18, 14),
-Surface = Color3.fromRGB(16, 24, 19), Element = Color3.fromRGB(21, 31, 25), ElementHover = Color3.fromRGB(30, 44, 36),
-Border = Color3.fromRGB(34, 50, 41), BorderSoft = Color3.fromRGB(25, 37, 30),
-Accent = Color3.fromRGB(30, 200, 120), AccentDark = Color3.fromRGB(18, 140, 82), AccentLight = Color3.fromRGB(110, 240, 170),
-Text = Color3.fromRGB(232, 245, 238), SubText = Color3.fromRGB(130, 150, 140), TextHover = Color3.fromRGB(255, 255, 255),
-Muted = Color3.fromRGB(84, 100, 91), Alt1 = Color3.fromRGB(14, 21, 17), Alt2 = Color3.fromRGB(6, 11, 8),
-},
-Amethyst = {
-Primary = Color3.fromRGB(8, 6, 12), Secondary = Color3.fromRGB(12, 9, 18), Tertiary = Color3.fromRGB(17, 13, 25),
-Surface = Color3.fromRGB(22, 17, 32), Element = Color3.fromRGB(28, 22, 41), ElementHover = Color3.fromRGB(40, 32, 58),
-Border = Color3.fromRGB(46, 37, 66), BorderSoft = Color3.fromRGB(34, 27, 49),
-Accent = Color3.fromRGB(150, 90, 255), AccentDark = Color3.fromRGB(110, 60, 200), AccentLight = Color3.fromRGB(200, 160, 255),
-Text = Color3.fromRGB(240, 234, 250), SubText = Color3.fromRGB(150, 140, 168), TextHover = Color3.fromRGB(255, 255, 255),
-Muted = Color3.fromRGB(98, 88, 118), Alt1 = Color3.fromRGB(19, 14, 28), Alt2 = Color3.fromRGB(9, 7, 14),
-},
 Dark = {
-Primary = Color3.fromRGB(0, 0, 0), Secondary = Color3.fromRGB(3, 3, 3), Tertiary = Color3.fromRGB(6, 6, 6),
-Surface = Color3.fromRGB(9, 9, 9), Element = Color3.fromRGB(13, 13, 13), ElementHover = Color3.fromRGB(22, 22, 22),
-Border = Color3.fromRGB(30, 30, 30), BorderSoft = Color3.fromRGB(18, 18, 18),
+Primary = Color3.fromRGB(0, 0, 0), Secondary = Color3.fromRGB(12, 12, 15), Tertiary = Color3.fromRGB(17, 17, 21),
+Surface = Color3.fromRGB(22, 22, 27), Element = Color3.fromRGB(28, 28, 34), ElementHover = Color3.fromRGB(42, 42, 50),
+Border = Color3.fromRGB(52, 52, 61), BorderSoft = Color3.fromRGB(34, 34, 40),
 Accent = Color3.fromRGB(38, 38, 42), AccentDark = Color3.fromRGB(24, 24, 27), AccentLight = Color3.fromRGB(70, 70, 78),
 Text = Color3.fromRGB(245, 245, 245), SubText = Color3.fromRGB(165, 165, 165), TextHover = Color3.fromRGB(255, 255, 255),
 Muted = Color3.fromRGB(110, 110, 110), Alt1 = Color3.fromRGB(5, 5, 5), Alt2 = Color3.fromRGB(1, 1, 1),
@@ -22095,7 +22665,6 @@ if v103.hubNameLabel then
 v103.hubNameLabel.Text = tostring(v103.config.Name or "Larp")
 end
 
-v103:Notify({ Title = "Theme: " .. themeName, Duration = 2 })
 
 -- repete a varredura: toggles/tweens que terminam depois voltavam com a cor antiga (bug ao reexecutar)
 for _, waitTime in ipairs({ 0.5, 1, 2 }) do
@@ -22113,26 +22682,8 @@ end
 end)
 end
 
-local themeGroup = entity:AddGroup({ Name = "Themes", Side = "Right", Icon = "rbxassetid://10723427199" })
-
-tbl24.dropdowns.Menu_Theme = themeGroup:AddDropdown({
-Name = "Theme",
-SaveId = "Menu_Theme",
-Options = { "Crimson", "Midnight", "Emerald", "Amethyst", "Dark" },
-Default = "Crimson",
-Callback = function(selectedTheme)
-if type(selectedTheme) == "table" then
-selectedTheme = selectedTheme[1]
-end
-
-applyLarpTheme(selectedTheme)
-end,
-})
-
-
-if themeGroup.UpdateSize then
-themeGroup.UpdateSize()
-end
+-- Tema fixo: Dark (seletor de temas removido)
+applyLarpTheme("Dark")
 -- ===== END LARP THEMES =====
 
 -- ===== LARP CUSTOM BACKGROUND =====
@@ -22146,6 +22697,11 @@ local function setCustomBackgroundDividersDimmed(dimmed)
     local mainFrame = imageLabel and imageLabel.Parent
     if not mainFrame then
         return
+    end
+
+    local sidebarBackground = v103 and v103.tabSidebarBackground
+    if sidebarBackground and sidebarBackground.Parent then
+        sidebarBackground.BackgroundTransparency = dimmed and 1 or 0
     end
 
     for _, dividerName in ipairs(customBackgroundDividerNames) do
@@ -22351,6 +22907,82 @@ local curveTypeOptions = {
 "Stop",
 }
 
+local function getMobileViewport()
+local screenGuiSize = v103 and v103.screenGuiYay and v103.screenGuiYay.AbsoluteSize
+if screenGuiSize and screenGuiSize.X > 0 and screenGuiSize.Y > 0 then
+return screenGuiSize
+end
+local camera = workspace.CurrentCamera
+return camera and camera.ViewportSize or Vector2.new(800, 600)
+end
+
+local function layoutMobileButtons()
+if not mobileModeEnabled then return end
+
+local viewport = getMobileViewport()
+local items = {}
+local columnWidth, rowHeight = 0, 0
+for key, entry in pairs(mobileEntries) do
+if entry.button and entry.button.Parent then
+local width = entry.button.AbsoluteSize.X > 0 and entry.button.AbsoluteSize.X or entry.button.Size.X.Offset
+local height = entry.button.AbsoluteSize.Y > 0 and entry.button.AbsoluteSize.Y or entry.button.Size.Y.Offset
+columnWidth = math.max(columnWidth, width)
+rowHeight = math.max(rowHeight, height)
+table.insert(items, { Key = tostring(key), Entry = entry })
+end
+end
+table.sort(items, function(a, b) return a.Key < b.Key end)
+
+local margin, top, gap = 10, 72, 8
+if #items == 0 then return end
+local availableHeight = math.max(rowHeight, viewport.Y - top - margin)
+local rowsPerColumn = math.max(1, math.floor((availableHeight + gap) / (rowHeight + gap)))
+for index, item in ipairs(items) do
+local button = item.Entry.button
+local width = button.AbsoluteSize.X > 0 and button.AbsoluteSize.X or button.Size.X.Offset
+local height = button.AbsoluteSize.Y > 0 and button.AbsoluteSize.Y or button.Size.Y.Offset
+local column = math.floor((index - 1) / rowsPerColumn)
+local row = (index - 1) % rowsPerColumn
+local maxX = math.max(margin, viewport.X - width - margin)
+local maxY = math.max(margin, viewport.Y - height - margin)
+
+if button:GetAttribute("UserMoved") then
+button.Position = UDim2.fromOffset(
+math.clamp(button.Position.X.Offset, margin, maxX),
+math.clamp(button.Position.Y.Offset, margin, maxY)
+)
+else
+local columnLeft = viewport.X - margin - columnWidth - column * (columnWidth + gap)
+local x = math.clamp(columnLeft + columnWidth - width, margin, maxX)
+local y = math.clamp(top + row * (rowHeight + gap), margin, maxY)
+button.Position = UDim2.fromOffset(x, y)
+end
+end
+end
+
+local mobileViewportConnection, mobileCameraChangedConnection
+local function refreshMobileLayout()
+if not mobileModeEnabled then return end
+if v103 and v103.UpdateLayoutScale then
+v103:UpdateLayoutScale()
+end
+layoutMobileButtons()
+end
+
+local function watchMobileCamera()
+if mobileViewportConnection then
+mobileViewportConnection:Disconnect()
+mobileViewportConnection = nil
+end
+local camera = workspace.CurrentCamera
+if camera then
+mobileViewportConnection = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+task.defer(refreshMobileLayout)
+end)
+end
+task.defer(refreshMobileLayout)
+end
+
 local function refreshMobileButton(entry)
 local button = entry.button
 
@@ -22427,6 +23059,7 @@ entry.button = nil
 end
 
 refreshMobileIcon(entry)
+layoutMobileButtons()
 end
 
 local function createMobileButton(entry)
@@ -22435,20 +23068,9 @@ return
 end
 
 local colors = v103.config.Colors
-local activeButtons = 0
-
-for _, other in pairs(mobileEntries) do
-if other.button then
-activeButtons = activeButtons + 1
-end
-end
-
-local camera = workspace.CurrentCamera
-local viewport = camera and camera.ViewportSize or Vector2.new(800, 600)
 local isCurveType = entry.kind == "dropdown" or entry.kind == "curve-option"
 local buttonWidth = isCurveType and 116 or 64
 local buttonHeight = isCurveType and 44 or 64
-local buttonGap = isCurveType and 50 or 70
 local buttonText = entry.kind == "curve-option" and entry.name or (isCurveType and ("Curve Type\n" .. tostring(entry.object.value or "Camera")) or entry.name)
 
 local button = createInstance("TextButton", {
@@ -22462,7 +23084,7 @@ TextColor3 = colors.SubText,
 TextSize = 11,
 TextWrapped = true,
 Size = UDim2.new(0, buttonWidth, 0, buttonHeight),
-Position = UDim2.new(0, viewport.X - buttonWidth - 20, 0, 90 + (activeButtons % 6) * buttonGap),
+Position = UDim2.fromOffset(0, 72),
 ZIndex = 100,
 Parent = v103.screenGuiYay,
 })
@@ -22472,6 +23094,7 @@ createInstance("UIStroke", { Name = "UIStroke", Color = isCurveType and colors.A
 createInstance("UIPadding", { Name = "UIPadding", PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 4), Parent = button })
 
 entry.button = button
+layoutMobileButtons()
 
 -- arrastar para mover; toque curto aciona a função
 button.InputBegan:Connect(function(input)
@@ -22484,6 +23107,10 @@ local startPosition = button.Position
 local moved = false
 local changedConnection = nil
 local endedConnection = nil
+local function finishDrag()
+if changedConnection then changedConnection:Disconnect(); changedConnection = nil end
+if endedConnection then endedConnection:Disconnect(); endedConnection = nil end
+end
 
 changedConnection = mobileUIS.InputChanged:Connect(function(changed)
 local isSameTouch = changed == input
@@ -22494,18 +23121,24 @@ local delta = changed.Position - dragStart
 
 if delta.Magnitude > 10 then
 moved = true
+button:SetAttribute("UserMoved", true)
 end
 
 if moved then
-button.Position = UDim2.new(0, startPosition.X.Offset + delta.X, 0, startPosition.Y.Offset + delta.Y)
+local viewport = getMobileViewport()
+local width = button.AbsoluteSize.X > 0 and button.AbsoluteSize.X or button.Size.X.Offset
+local height = button.AbsoluteSize.Y > 0 and button.AbsoluteSize.Y or button.Size.Y.Offset
+button.Position = UDim2.fromOffset(
+math.clamp(startPosition.X.Offset + delta.X, 10, math.max(10, viewport.X - width - 10)),
+math.clamp(startPosition.Y.Offset + delta.Y, 10, math.max(10, viewport.Y - height - 10))
+)
 end
 end
 end)
 
 endedConnection = input.Changed:Connect(function()
 if input.UserInputState == Enum.UserInputState.End then
-changedConnection:Disconnect()
-endedConnection:Disconnect()
+finishDrag()
 
 if not moved then
 activateMobileEntry(entry)
@@ -22513,6 +23146,8 @@ end
 end
 end)
 end)
+
+button.Destroying:Connect(finishDrag)
 
 refreshMobileButton(entry)
 refreshMobileIcon(entry)
@@ -22537,8 +23172,8 @@ Name = "LarpMobileIcon",
 AutoButtonColor = false,
 BackgroundTransparency = 1,
 Text = "",
-Size = UDim2.new(0, 24, 0, 20),
-Position = UDim2.new(0, iconX, label.Position.Y.Scale, label.Position.Y.Offset - 1),
+Size = UDim2.new(0, 40, 0, 32),
+Position = UDim2.new(0, iconX, label.Position.Y.Scale, label.Position.Y.Offset - 7),
 Visible = mobileModeEnabled,
 ZIndex = label.ZIndex + 1,
 Parent = label.Parent,
@@ -22591,8 +23226,8 @@ Name = "LarpMobileCurveOptionIcon",
 AutoButtonColor = false,
 BackgroundTransparency = 1,
 Text = "",
-Size = UDim2.new(0, 24, 0, 20),
-Position = UDim2.new(1, -27, 0.5, -10),
+Size = UDim2.new(0, 40, 0, 32),
+Position = UDim2.new(1, -42, 0.5, -16),
 Visible = mobileModeEnabled,
 ZIndex = optionButton.ZIndex + 3,
 Parent = optionButton,
@@ -22708,9 +23343,16 @@ end
 end
 
 local function setMobileMode(enabled)
+enabled = mobileUIS.TouchEnabled and not mobileUIS.KeyboardEnabled and enabled == true
 mobileModeEnabled = enabled
 
 if enabled then
+if mobileCameraChangedConnection then
+mobileCameraChangedConnection:Disconnect()
+mobileCameraChangedConnection = nil
+end
+watchMobileCamera()
+mobileCameraChangedConnection = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(watchMobileCamera)
 scanMobileEntries()
 
 if mobileCurveOptionWatcher then
@@ -22730,6 +23372,14 @@ scanMobileEntries()
 end
 end)
 else
+if mobileCameraChangedConnection then
+mobileCameraChangedConnection:Disconnect()
+mobileCameraChangedConnection = nil
+end
+if mobileViewportConnection then
+mobileViewportConnection:Disconnect()
+mobileViewportConnection = nil
+end
 if mobileCurveOptionWatcher then
 mobileCurveOptionWatcher:Disconnect()
 mobileCurveOptionWatcher = nil
@@ -22745,12 +23395,38 @@ end
 end
 end
 
+larpBBState.MobileUICleanup = function()
+mobileModeEnabled = false
+if mobileCameraChangedConnection then
+mobileCameraChangedConnection:Disconnect()
+mobileCameraChangedConnection = nil
+end
+if mobileViewportConnection then
+mobileViewportConnection:Disconnect()
+mobileViewportConnection = nil
+end
+if mobileCurveOptionWatcher then
+mobileCurveOptionWatcher:Disconnect()
+mobileCurveOptionWatcher = nil
+end
+for _, entry in pairs(mobileEntries) do
+destroyMobileButton(entry)
+if entry.icon then
+pcall(function() entry.icon:Destroy() end)
+entry.icon = nil
+end
+end
+table.clear(mobileEntries)
+table.clear(mobileCurveOptionIcons)
+end
+
+if mobileUIS.TouchEnabled and not mobileUIS.KeyboardEnabled then
 local mobileGroup = entity:AddGroup({ Name = "Mobile", Side = "Left", Icon = "rbxassetid://10723427199" })
 
 mobileGroup:AddToggle({
 Name = "Mobile Mode",
 SaveId = "Mobile_Mode",
-Default = mobileUIS.TouchEnabled and not mobileUIS.KeyboardEnabled,
+Default = true,
 Keybind = false,
 Callback = function(value)
 setMobileMode(value and true or false)
@@ -22759,6 +23435,7 @@ end,
 
 if mobileGroup.UpdateSize then
 mobileGroup.UpdateSize()
+end
 end
 -- ===== END LARP MOBILE MODE =====
 
@@ -22771,6 +23448,7 @@ end
 
 									local overlaysGroup = entity:AddGroup({ Name = "Overlays", Side = "Right", Icon = "rbxassetid://10723427199" })
 										local overlayPingEnabled, overlayFPSEnabled = false, false
+										local overlayPingTextSize, overlayFPSTextSize = 13, 16
 										local overlayGui, pingCard, fpsCard, pingLabel, fpsLabel, overlayConnection
 
 										local function destroyCard(card)
@@ -22785,7 +23463,7 @@ end
 										end
 										larpBBState.CustomOverlayCleanup = removeMetricOverlay
 
-										local function makeCard(title, y, accent, textColor)
+										local function makeCard(title, y, accent, textColor, textSize)
 											local card = Instance.new("Frame")
 											card.Name = title .. "Overlay"
 											card.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -22808,7 +23486,7 @@ end
 											label.Size = UDim2.new(1, 0, 1, 0)
 											label.Font = Enum.Font.GothamBold
 											label.TextColor3 = textColor
-											label.TextSize = 13
+											label.TextSize = textSize or 13
 											label.TextXAlignment = Enum.TextXAlignment.Center
 											label.Parent = card
 											card.Active = true
@@ -22830,6 +23508,7 @@ end
 											dragChangedConnection = userInputService.InputChanged:Connect(function(input)
 												if dragging and input == dragInput then
 													local delta = input.Position - dragStart
+													if math.abs(delta.X) > 0 or math.abs(delta.Y) > 0 then card:SetAttribute("UserMoved", true) end
 													card.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
 												end
 											end)
@@ -22839,25 +23518,46 @@ end
 											return card, label
 										end
 
+										    local function updateCardSize(card, label)
+										        if not card or not label then return end
+										        local bounds = textService:GetTextSize(label.Text, label.TextSize, label.Font, Vector2.new(1000, 100))
+										        local width = math.max(106, math.ceil(bounds.X + 20))
+										        local height = math.max(42, math.ceil(bounds.Y + 14))
+										        if card.Size.X.Offset ~= width or card.Size.Y.Offset ~= height then
+										            card.Size = UDim2.new(0, width, 0, height)
+										            if card == pingCard and fpsCard and not fpsCard:GetAttribute("UserMoved") then
+										                fpsCard.Position = UDim2.new(pingCard.Position.X.Scale, pingCard.Position.X.Offset, pingCard.Position.Y.Scale, pingCard.Position.Y.Offset + height + 8)
+										            end
+										        end
+										    end
+
 										local function refreshMetricOverlay()
 											if not (overlayPingEnabled or overlayFPSEnabled) then removeMetricOverlay(); return end
 											if not overlayGui or not overlayGui.Parent then
 												overlayGui = Instance.new("ScreenGui")
 												overlayGui.Name = "LarpMetricOverlays"
 												overlayGui.ResetOnSpawn = false
-												local parent = game:GetService("CoreGui")
+												local parent
 												if gethui then local ok, holder = pcall(gethui); if ok and typeof(holder) == "Instance" then parent = holder end end
-												overlayGui.Parent = parent
+												if not parent then
+												    local ok, holder = pcall(function()
+												        return localPlayer and (localPlayer:FindFirstChildOfClass("PlayerGui") or localPlayer:FindFirstChild("PlayerGui"))
+												    end)
+												    if ok then parent = holder end
+												end
+												if not parent then local ok, holder = pcall(function() return game:GetService("CoreGui") end); if ok then parent = holder end end
+												if parent then pcall(function() overlayGui.Parent = parent end) end
 												larpBBState.CustomOverlayGui = overlayGui
 											end
 											if overlayPingEnabled and not pingCard then
-												pingCard, pingLabel = makeCard("Ping", 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255))
+												pingCard, pingLabel = makeCard("Ping", 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255), overlayPingTextSize)
 												pingCard.BackgroundTransparency = 1
 											end
 											if not overlayPingEnabled and pingCard then destroyCard(pingCard); pingCard, pingLabel = nil, nil end
+											if not pingCard and fpsCard and not fpsCard:GetAttribute("UserMoved") then fpsCard.Position = UDim2.new(0, 8, 0, 8) end
 											if overlayFPSEnabled and not fpsCard then
-													fpsCard, fpsLabel = makeCard("FPS", overlayPingEnabled and 58 or 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255))
-													fpsLabel.TextSize = 16
+													fpsCard, fpsLabel = makeCard("FPS", pingCard and (pingCard.Position.Y.Offset + pingCard.Size.Y.Offset + 8) or 8, Color3.fromRGB(0, 0, 0), Color3.fromRGB(255, 255, 255), overlayFPSTextSize)
+													fpsLabel.TextSize = overlayFPSTextSize
 												end
 											if not overlayFPSEnabled and fpsCard then destroyCard(fpsCard); fpsCard, fpsLabel = nil, nil end
 											if not overlayConnection then
@@ -22865,8 +23565,14 @@ end
 												overlayConnection = runService.RenderStepped:Connect(function(dt)
 													frames += 1; elapsed += dt
 													if elapsed >= 0.5 then fps = math.floor(frames / elapsed + 0.5); frames, elapsed = 0, 0 end
-													if pingLabel then pingLabel.Text = "Ping: " .. math.floor((latestPingMs or localPlayer:GetNetworkPing() * 1000) + 0.5) .. "ms" end
-													if fpsLabel then fpsLabel.Text = tostring(fps) .. " FPS" end
+													if pingLabel then
+													    pingLabel.Text = "Ping: " .. math.floor((latestPingMs or localPlayer:GetNetworkPing() * 1000) + 0.5) .. "ms"
+													    updateCardSize(pingCard, pingLabel)
+													end
+													if fpsLabel then
+													    fpsLabel.Text = tostring(fps) .. " FPS"
+													    updateCardSize(fpsCard, fpsLabel)
+													end
 												end)
 											end
 										end
@@ -22875,6 +23581,133 @@ end
 											if kind == "ping" then overlayPingEnabled = enabled else overlayFPSEnabled = enabled end
 											refreshMetricOverlay()
 										end
+
+										local watermarkEnabled = false
+										local watermarkGui, watermarkCard, watermarkDragConnection
+
+										local function removeWatermark()
+											if watermarkDragConnection then
+												watermarkDragConnection:Disconnect()
+												watermarkDragConnection = nil
+											end
+											if watermarkGui then
+												pcall(function() watermarkGui:Destroy() end)
+											end
+											watermarkGui, watermarkCard = nil, nil
+											larpBBState.WatermarkGui = nil
+										end
+
+										local function refreshWatermark()
+											local menuVisible = v103 and v103.isToggledOn
+											if not watermarkEnabled or menuVisible then
+												removeWatermark()
+												return
+											end
+
+											if watermarkGui and watermarkGui.Parent then return end
+											watermarkGui = Instance.new("ScreenGui")
+											watermarkGui.Name = "LarpWatermark"
+											watermarkGui.ResetOnSpawn = false
+											watermarkGui.IgnoreGuiInset = true
+											watermarkGui.DisplayOrder = 10000
+											watermarkGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+											parentGui(watermarkGui)
+											larpBBState.WatermarkGui = watermarkGui
+
+											watermarkCard = Instance.new("Frame")
+											watermarkCard.Name = "WatermarkCard"
+										watermarkCard.AnchorPoint = Vector2.new(0.5, 0)
+										watermarkCard.Position = UDim2.new(0.5, 0, 0, 12)
+										watermarkCard.Size = UDim2.new(0, 100, 0, 36)
+											watermarkCard.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+											watermarkCard.BackgroundTransparency = 0
+											watermarkCard.BorderSizePixel = 0
+											watermarkCard.Active = true
+											watermarkCard.Parent = watermarkGui
+
+											local dragging, dragInput, dragStart, startPosition = false, nil, nil, nil
+											watermarkCard.InputBegan:Connect(function(input)
+												if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+													dragging = true
+													dragStart = input.Position
+													startPosition = watermarkCard.Position
+													input.Changed:Connect(function()
+														if input.UserInputState == Enum.UserInputState.End then dragging = false end
+													end)
+												end
+											end)
+											watermarkCard.InputChanged:Connect(function(input)
+												if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+													dragInput = input
+												end
+											end)
+											watermarkDragConnection = userInputService.InputChanged:Connect(function(input)
+												if dragging and input == dragInput and watermarkCard and watermarkCard.Parent then
+													local delta = input.Position - dragStart
+													watermarkCard.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+												end
+											end)
+
+											local corner = Instance.new("UICorner")
+											corner.CornerRadius = UDim.new(0, 5)
+											corner.Parent = watermarkCard
+
+											local label = Instance.new("TextButton")
+											label.Name = "WatermarkText"
+											label.BackgroundTransparency = 1
+											label.AutoButtonColor = false
+											label.Size = UDim2.new(1, 0, 1, 0)
+										label.Font = Enum.Font.GothamSemibold
+										label.Text = "Larp"
+										label.TextColor3 = Color3.fromRGB(255, 255, 255)
+										label.TextSize = 14
+											label.TextXAlignment = Enum.TextXAlignment.Center
+											label.TextYAlignment = Enum.TextYAlignment.Center
+											label.Parent = watermarkCard
+											label.Activated:Connect(function()
+												if v103 and v103.SetVisible then
+													v103:SetVisible(true)
+												end
+											end)
+										end
+
+										larpBBState.WatermarkCleanup = removeWatermark
+										larpBBState.WatermarkRefresh = refreshWatermark
+										local originalSetVisible = v103.SetVisible
+										if type(originalSetVisible) == "function" then
+											v103.SetVisible = function(menu, visible)
+												originalSetVisible(menu, visible)
+												refreshWatermark()
+											end
+										end
+
+										tbl24.toggles.Watermark = overlaysGroup:AddToggle({
+											Name = "Watermark",
+											SaveId = "Overlay_Watermark",
+											Default = false,
+											Callback = function(enabled)
+												watermarkEnabled = enabled and true or false
+												refreshWatermark()
+											end,
+										})
+										
+										    tbl24.sliders.OverlayPingTextSize = overlaysGroup:AddSlider({
+										        Name = "Ping Text Size", SaveId = "Overlay_Ping_Text_Size",
+										        Min = 10, Max = 36, Default = 13, Increment = 1,
+										        Callback = function(value)
+										            overlayPingTextSize = tonumber(value) or 13
+										            if pingLabel then pingLabel.TextSize = overlayPingTextSize; updateCardSize(pingCard, pingLabel) end
+										        end,
+										    })
+										    tbl24.sliders.OverlayFPSTextSize = overlaysGroup:AddSlider({
+										        Name = "FPS Text Size", SaveId = "Overlay_FPS_Text_Size",
+										        Min = 10, Max = 36, Default = 16, Increment = 1,
+										        Callback = function(value)
+										            overlayFPSTextSize = tonumber(value) or 16
+										            if fpsLabel then fpsLabel.TextSize = overlayFPSTextSize; updateCardSize(fpsCard, fpsLabel) end
+										        end,
+										    })
+
 										tbl24.toggles.Show_Overlay_Ping = overlaysGroup:AddToggle({ Name = "Show Ping", SaveId = "Overlay_Show_Ping", Default = false, Callback = function(enabled) setMetric("ping", enabled) end })
 										tbl24.toggles.Show_Overlay_FPS = overlaysGroup:AddToggle({ Name = "Show FPS", SaveId = "Overlay_Show_FPS", Default = false, Callback = function(enabled) setMetric("fps", enabled) end })
 										tbl24.toggles.Hide_Overlays = overlaysGroup:AddToggle({ Name = "Hide Overlays", SaveId = "Hide_Overlays", Default = false, Callback = function(enabled) if enabled then tbl25.UIExtra.HideOverlays() else refreshMetricOverlay() end end })
