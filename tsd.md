@@ -9972,12 +9972,31 @@ local function handlePlayerRemoving(line, object)
 									-- (guardado em tbl25.Loop para nao criar novos locals: limite de 200 locals por funcao do Luau)
 									-- Compensacao de ping alto: so age com ping >= 100ms (devolve 0 abaixo disso, entao o autoparry de ping baixo
 									-- nao muda). Devolve segundos extras de antecedencia (o parry demora mais para chegar ao servidor).
-									tbl25.Loop.HighPingLead = function(pingSeconds)
-										local ms = (pingSeconds or 0) * 1000
-										if ms < 100 then
+									-- SOMENTE MOBILE (touch sem teclado): o loop decide uma vez por frame e o parry sai por Remote; com FPS
+									-- baixo isso chega mais tarde que no PC. Antecipa meio frame (medido) + 0.015s de latencia de toque/remote.
+									-- No PC devolve 0, entao nada muda la.
+									tbl25.Loop.MobileLead = function()
+										if not (userInputService.TouchEnabled and not userInputService.KeyboardEnabled) then
 											return 0
 										end
-										return math.min(0.03 + (ms - 100) / 1000 * 0.4, 0.12)
+										if not larpBBState.Connections["Mobile Frame"] then
+											larpBBState.MobileFrameDt = 1 / 60
+											larpBBState.Connections["Mobile Frame"] = runService.Heartbeat:Connect(function(dt)
+												if dt > 0 and dt < 0.2 then
+													larpBBState.MobileFrameDt = (larpBBState.MobileFrameDt or dt) * 0.9 + dt * 0.1
+												end
+											end)
+										end
+										return math.clamp(0.015 + (larpBBState.MobileFrameDt or 1 / 60) * 0.5, 0.02, 0.06)
+									end
+
+									tbl25.Loop.HighPingLead = function(pingSeconds)
+										local ms = (pingSeconds or 0) * 1000
+										local mobile = tbl25.Loop.MobileLead()
+										if ms < 100 then
+											return mobile
+										end
+										return math.min(0.03 + (ms - 100) / 1000 * 0.4, 0.12) + mobile
 									end
 
 									-- Bola reta: se a direcao da bola nao mudou por >= 0.12s (e nao ha curva medida), o parry sai um pouco
